@@ -17,20 +17,20 @@ export default function StatesIndex() {
         <table className="data">
           <thead>
             <tr>
-              <th>State</th><th className="num">Dams</th><th className="num">High hazard</th><th className="num">Poor / Unsat.</th><th className="num">Not rated</th><th className="num">No EAP</th><th className="num">D &amp; F grades</th><th className="num">Est. cost</th>
+              <th>State</th><th className="num hide-sm">Dams</th><th className="num">High hazard</th><th className="num">Poor / Unsat.</th><th className="num hide-sm">Not rated</th><th className="num">No EAP</th><th className="num hide-sm">D &amp; F grades</th><th className="num hide-sm">Est. cost</th>
             </tr>
           </thead>
           <tbody>
             {states.map(([st, s]) => (
               <tr key={st}>
                 <td><Link to={`/state/${st}`}>{s.name}</Link></td>
-                <td className="num">{fmtInt(s.dams)}</td>
+                <td className="num hide-sm">{fmtInt(s.dams)}</td>
                 <td className="num">{fmtInt(s.high_hazard)}</td>
                 <td className="num">{fmtInt(s.high_poor_unsat)}</td>
-                <td className="num">{fmtInt(s.high_not_rated)}</td>
+                <td className="num hide-sm">{fmtInt(s.high_not_rated)}</td>
                 <td className="num">{fmtInt(s.high_no_eap)}</td>
-                <td className="num">{fmtInt((s.grades.D ?? 0) + (s.grades.F ?? 0))}</td>
-                <td className="num">{fmtUSD(s.cost_low_usd)} – {fmtUSD(s.cost_high_usd)}</td>
+                <td className="num hide-sm">{fmtInt((s.grades.D ?? 0) + (s.grades.F ?? 0))}</td>
+                <td className="num hide-sm">{fmtUSD(s.cost_low_usd)} – {fmtUSD(s.cost_high_usd)}</td>
               </tr>
             ))}
           </tbody>

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { applyTheme, getTheme, useLens } from '../lib/lens'
 import SearchBox from './SearchBox'
 
@@ -28,33 +28,66 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { lens, setLens } = useLens()
   const [theme, setTheme] = useState(getTheme())
   useEffect(() => applyTheme(theme), [theme])
+  // Phone menu: closes whenever the route changes or Escape is pressed.
+  // The menu remembers the page it was opened on, so navigating anywhere closes it.
+  const { pathname, search } = useLocation()
+  const here = pathname + search
+  const [menuAt, setMenuAt] = useState<string | null>(null)
+  const menuOpen = menuAt === here
+  const setMenuOpen = (open: boolean) => setMenuAt(open ? here : null)
+  useEffect(() => {
+    if (!menuOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuAt(null) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [menuOpen])
+  const themeButton = (
+    <button
+      type="button"
+      className="icon-btn"
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      title="Toggle theme"
+    >
+      {theme === 'dark' ? '☀' : '☾'}
+    </button>
+  )
 
   return (
     <>
       <a href="#main" className="skip-link">Skip to content</a>
-      <header className="site-header">
+      <div className="draft-banner" role="note">
+        <strong>Experimental prototype draft.</strong> Built with Claude Code; it may contain mistakes and has not yet been reviewed by experts.
+      </div>
+      <header className={`site-header${menuOpen ? ' menu-open' : ''}`}>
         <div className="wrap">
           <Link to="/" className="brand" aria-label="DamHealth home"><Logo />DamHealth</Link>
+          <div className="header-phone-tools">
+            {themeButton}
+            <button
+              type="button"
+              className="menu-btn"
+              aria-expanded={menuOpen}
+              aria-controls="site-menu"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <span aria-hidden="true">{menuOpen ? '✕' : '☰'}</span> Menu
+            </button>
+          </div>
+          <div className="site-menu" id="site-menu">
           <nav className="nav" aria-label="Primary">
             {NAV.map(([to, label]) => (
               <NavLink key={to} to={to}>{label}</NavLink>
             ))}
           </nav>
           <div className="header-tools">
-            <div style={{ minWidth: 220, flex: 1 }}><SearchBox compact /></div>
+            <div className="header-search"><SearchBox compact /></div>
             <div className="lens-switch" role="group" aria-label="Choose how information is presented">
               <button type="button" aria-pressed={lens === 'community'} onClick={() => setLens('community')}>Community</button>
               <button type="button" aria-pressed={lens === 'engineering'} onClick={() => setLens('engineering')}>Engineering</button>
             </div>
-            <button
-              type="button"
-              className="icon-btn"
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              title="Toggle theme"
-            >
-              {theme === 'dark' ? '☀' : '☾'}
-            </button>
+            <span className="theme-desktop">{themeButton}</span>
+          </div>
           </div>
         </div>
       </header>

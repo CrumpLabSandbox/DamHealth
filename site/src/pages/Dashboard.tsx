@@ -69,8 +69,8 @@ export default function Dashboard() {
     ['…under construction', ps.under_construction ?? 0],
     ['…completed', ps.completed ?? 0],
   ] as [string, number][]
-  const th = (key: Col, label: string, num = true) => (
-    <th className={num ? 'num' : undefined} aria-sort={sort === key ? (desc ? 'descending' : 'ascending') : 'none'}>
+  const th = (key: Col, label: string, num = true, extra = '') => (
+    <th className={[num ? 'num' : '', extra].filter(Boolean).join(' ') || undefined} aria-sort={sort === key ? (desc ? 'descending' : 'ascending') : 'none'}>
       <button className="linklike" style={{ textDecoration: 'none', color: 'inherit', fontWeight: 600 }} onClick={() => { if (sort === key) setDesc(!desc); else { setSort(key); setDesc(key !== 'name') } }}>{label}{sort === key ? (desc ? ' ▼' : ' ▲') : ''}</button>
     </th>
   )
@@ -177,13 +177,13 @@ export default function Dashboard() {
       <p className="small muted">Click a column to sort. "% bad" is Poor/Unsatisfactory as a share of the state's high-hazard dams.</p>
       <div style={{ overflowX: 'auto' }} tabIndex={0}>
         <table className="data">
-          <thead><tr>{th('name', 'State', false)}{th('dams', 'Dams')}{th('high_hazard', 'High hazard')}{th('high_poor_unsat', 'Poor / Unsat.')}{th('pct_bad', '% bad')}{th('high_not_rated', 'Not rated')}{th('high_no_eap', 'No EAP')}{th('df', 'D & F')}{th('cost', 'Cost (high band)')}</tr></thead>
+          <thead><tr>{th('name', 'State', false)}{th('dams', 'Dams', true, 'hide-sm')}{th('high_hazard', 'High hazard')}{th('high_poor_unsat', 'Poor / Unsat.')}{th('pct_bad', '% bad')}{th('high_not_rated', 'Not rated', true, 'hide-sm')}{th('high_no_eap', 'No EAP')}{th('df', 'D & F', true, 'hide-sm')}{th('cost', 'Cost (high band)', true, 'hide-sm')}</tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.st}>
                 <td><Link to={`/state/${r.st}`}>{r.name}</Link></td>
-                <td className="num">{fmtInt(r.dams)}</td><td className="num">{fmtInt(r.high_hazard)}</td><td className="num">{fmtInt(r.high_poor_unsat)}</td>
-                <td className="num">{r.pct_bad.toFixed(0)}%</td><td className="num">{fmtInt(r.high_not_rated)}</td><td className="num">{fmtInt(r.high_no_eap)}</td><td className="num">{fmtInt(r.df)}</td><td className="num">{fmtUSD(r.cost)}</td>
+                <td className="num hide-sm">{fmtInt(r.dams)}</td><td className="num">{fmtInt(r.high_hazard)}</td><td className="num">{fmtInt(r.high_poor_unsat)}</td>
+                <td className="num">{r.pct_bad.toFixed(0)}%</td><td className="num hide-sm">{fmtInt(r.high_not_rated)}</td><td className="num">{fmtInt(r.high_no_eap)}</td><td className="num hide-sm">{fmtInt(r.df)}</td><td className="num hide-sm">{fmtUSD(r.cost)}</td>
               </tr>
             ))}
           </tbody>
@@ -191,6 +191,7 @@ export default function Dashboard() {
       </div>
 
       <h2 style={{ marginTop: 28 }}>Sources for this page</h2>
+      <div className="table-scroll" tabIndex={0}>
       <table className="data small">
         <thead><tr><th>Source</th><th>Publisher</th><th>Snapshot</th><th>Records</th><th>Where we read it</th></tr></thead>
         <tbody>
@@ -202,6 +203,7 @@ export default function Dashboard() {
           ))}
         </tbody>
       </table>
+      </div>
       <p className="small muted">Built {cat.built}. Download: <a href={`${import.meta.env.BASE_URL}data/summary.json`}>summary.json</a> · <Link to="/methodology">methodology</Link>.</p>
     </div>
   )

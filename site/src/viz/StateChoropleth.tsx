@@ -73,8 +73,8 @@ export default function StateChoropleth({ states, metric: initial = 'avg_grade_h
   return (
     <div>
       <div className="row" style={{ marginBottom: 8 }}>
-        <label className="small">Show{' '}
-          <select value={metric} onChange={(e) => setMetric(e.target.value as Metric)}>
+        <label className="small row" style={{ gap: 6, flex: '1 1 240px', minWidth: 0, flexWrap: 'nowrap' }}>Show
+          <select value={metric} onChange={(e) => setMetric(e.target.value as Metric)} style={{ flex: 1, minWidth: 0 }}>
             {METRICS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
           </select>
         </label>
@@ -116,7 +116,7 @@ export default function StateChoropleth({ states, metric: initial = 'avg_grade_h
             {!topo && <text x="480" y="300" textAnchor="middle" fill="var(--ink-3)">Loading map…</text>}
           </svg>
           <div className="row small" style={{ justifyContent: 'space-between' }}>
-            <span className="muted">{hover && states[hover] ? <><strong>{states[hover].name}</strong>: {fmt(value(states[hover], metric))}</> : 'Hover or focus a state; click to open it.'}</span>
+            <span className="muted">{hover && states[hover] ? <><strong>{states[hover].name}</strong>: {fmt(value(states[hover], metric))}</> : <><span className="hide-sm">Hover or focus a state; click to open it.</span><span className="show-sm">Tap a state to open it, or use the table for exact values.</span></>}</span>
             <span className="row" style={{ gap: 8, flexWrap: 'wrap' }} aria-hidden="true">
               {RAMP.map((c, i) => (
                 <span key={i} className="row" style={{ gap: 4 }}>

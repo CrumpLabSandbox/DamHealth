@@ -90,19 +90,19 @@ export default function StatePage() {
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table className="data">
-          <thead><tr><th>Grade</th><th>Dam</th><th>County</th><th>Hazard</th><th>Condition</th><th className="num">Built</th><th className="num">Storage (ac-ft)</th><th>EAP</th><th>Plan</th></tr></thead>
+          <thead><tr><th>Grade</th><th>Dam</th><th className="hide-sm">County</th><th>Hazard</th><th>Condition</th><th className="num hide-sm">Built</th><th className="num hide-sm">Storage (ac-ft)</th><th className="hide-sm">EAP</th><th className="hide-sm">Plan</th></tr></thead>
           <tbody>
             {rows.slice(0, limit).map((r) => (
               <tr key={r.id}>
                 <td><GradeBadge grade={r.grade} size="sm" /></td>
                 <td><Link to={`/dam/${r.id}`}>{r.name}</Link></td>
-                <td>{r.county ?? '—'}</td>
+                <td className="hide-sm">{r.county ?? '—'}</td>
                 <td>{{ H: 'High', S: 'Significant', L: 'Low', U: 'Undetermined', N: 'N/A' }[r.hz]}</td>
                 <td>{{ S: 'Satisfactory', F: 'Fair', P: 'Poor', U: 'Unsatisfactory', N: 'Not rated', '': '—' }[r.cond]}</td>
-                <td className="num">{r.year ?? '—'}</td>
-                <td className="num">{fmtInt(r.storage_acft)}</td>
-                <td>{r.eap ?? '—'}</td>
-                <td className="small">{cat?.plan_status_labels[r.plan_status] ?? r.plan_status}</td>
+                <td className="num hide-sm">{r.year ?? '—'}</td>
+                <td className="num hide-sm">{fmtInt(r.storage_acft)}</td>
+                <td className="hide-sm">{r.eap ?? '—'}</td>
+                <td className="small hide-sm">{cat?.plan_status_labels[r.plan_status] ?? r.plan_status}</td>
               </tr>
             ))}
           </tbody>

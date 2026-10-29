@@ -12,7 +12,10 @@ export default function Markdown({ file, className = 'prose' }: { file: string; 
     if (!cache.has(url)) cache.set(url, fetch(url).then((r) => (r.ok ? r.text() : `*Content not available (${r.status}).*`)))
     cache.get(url)!.then(setMd)
   }, [file])
-  const html = useMemo(() => (md == null ? '' : (marked.parse(md, { async: false }) as string)), [md])
+  // Wide Markdown tables scroll inside their own box instead of widening the page on phones.
+  const html = useMemo(() => (md == null ? '' : (marked.parse(md, { async: false }) as string)
+    .replace(/<table>/g, '<div class="table-scroll" tabindex="0"><table class="data">')
+    .replace(/<\/table>/g, '</table></div>')), [md])
   if (md == null) return <p className="muted">Loading…</p>
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />
 }

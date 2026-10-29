@@ -71,15 +71,15 @@ export default function Home() {
         <p className="muted prose">These dams carry an <strong>Unsatisfactory</strong> condition rating — a deficiency that regulators say needs immediate or emergency action — and a High hazard classification, ranked by the Dam Health Index and reservoir size.</p>
         <div style={{ overflowX: 'auto' }}>
           <table className="data">
-            <thead><tr><th>Grade</th><th>Dam</th><th>State</th><th className="num">Built</th><th className="num">Height (ft)</th><th className="num">Storage (ac-ft)</th><th>Plan status</th></tr></thead>
+            <thead><tr><th>Grade</th><th>Dam</th><th>State</th><th className="num hide-sm">Built</th><th className="num hide-sm">Height (ft)</th><th className="num">Storage (ac-ft)</th><th>Plan status</th></tr></thead>
             <tbody>
               {worst.map((r) => (
                 <tr key={r.id}>
                   <td><GradeBadge grade={r.grade} size="sm" /></td>
                   <td><Link to={`/dam/${r.id}`}>{r.name}</Link></td>
                   <td>{r.st}</td>
-                  <td className="num">{r.year ?? '—'}</td>
-                  <td className="num">{fmtInt(r.height_ft)}</td>
+                  <td className="num hide-sm">{r.year ?? '—'}</td>
+                  <td className="num hide-sm">{fmtInt(r.height_ft)}</td>
                   <td className="num">{fmtInt(r.storage_acft)}</td>
                   <td className="small">{cat?.plan_status_labels[r.plan_status] ?? r.plan_status}</td>
                 </tr>

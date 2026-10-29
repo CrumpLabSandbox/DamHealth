@@ -55,8 +55,8 @@ export default function DamSchematic({ dam, catalog }: { dam: Dam; catalog: Cata
             {lens === 'engineering' && <>
               <path d="M300 96 L322 96 L350 232 L286 232Z" fill="var(--concrete-dark)" opacity=".35" />
               <path d="M360 232 L395 232 L372 170Z" fill="var(--concrete)" opacity=".6" />
-              <text x="312" y="200" fontSize="9" fill="var(--ink)" textAnchor="middle">core</text>
-              <text x="378" y="226" fontSize="8" fill="var(--ink)" textAnchor="middle">toe drain</text>
+              <text className="lbl" x="312" y="200" fontSize="9" fill="var(--ink)" textAnchor="middle">core</text>
+              <text className="lbl" x="378" y="226" fontSize="8" fill="var(--ink)" textAnchor="middle">toe drain</text>
             </>}
           </g>
         )}
@@ -64,7 +64,7 @@ export default function DamSchematic({ dam, catalog }: { dam: Dam; catalog: Cata
           <g>
             <path d="M265 232 L275 88 L320 88 L400 232Z" fill="var(--concrete)" />
             <path d="M320 88 L400 232 L340 232Z" fill="var(--concrete-dark)" opacity=".35" />
-            {lens === 'engineering' && <text x="330" y="190" fontSize="9" fill="var(--ink)" textAnchor="middle">gravity section</text>}
+            {lens === 'engineering' && <text className="lbl" x="330" y="190" fontSize="9" fill="var(--ink)" textAnchor="middle">gravity section</text>}
           </g>
         )}
         {fam === 'arch' && (
@@ -72,7 +72,7 @@ export default function DamSchematic({ dam, catalog }: { dam: Dam; catalog: Cata
             <path d="M262 232 L270 88 L300 88 L320 232Z" fill="var(--concrete)" />
             <path d="M300 88 L320 232 L296 232Z" fill="var(--concrete-dark)" opacity=".35" />
             <path d="M268 88 Q 285 60 300 88" fill="none" stroke="var(--concrete-dark)" strokeWidth="2" strokeDasharray="3 3" />
-            {lens === 'engineering' && <text x="292" y="190" fontSize="9" fill="var(--ink)" textAnchor="middle">arch</text>}
+            {lens === 'engineering' && <text className="lbl" x="292" y="190" fontSize="9" fill="var(--ink)" textAnchor="middle">arch</text>}
           </g>
         )}
         {fam === 'buttress' && (
@@ -98,18 +98,18 @@ export default function DamSchematic({ dam, catalog }: { dam: Dam; catalog: Cata
         <g>
           <rect x="60" y="56" width="48" height="30" rx="3" fill="var(--surface)" stroke="var(--ink-3)" />
           <line x1="68" y1="66" x2="100" y2="66" stroke="var(--ink-3)" /><line x1="68" y1="74" x2="92" y2="74" stroke="var(--ink-3)" />
-          <text x="84" y="98" fontSize="8" fill="var(--ink-2)" textAnchor="middle">records &amp; oversight</text>
+          <text className="lbl lbl-sm" x="84" y="98" fontSize="8" fill="var(--ink-2)" textAnchor="middle">records &amp; oversight</text>
         </g>
         {/* dimension */}
         {h && (
           <g stroke="var(--ink-2)" fill="var(--ink-2)" fontSize="9">
             <line x1="470" y1="88" x2="470" y2="232" /><line x1="465" y1="88" x2="475" y2="88" /><line x1="465" y1="232" x2="475" y2="232" />
-            <text x="476" y="164" transform="rotate(-90 476 164)" textAnchor="middle">{fmtInt(h)} ft</text>
+            <text className="lbl" x="476" y="164" transform="rotate(-90 476 164)" textAnchor="middle">{fmtInt(h)} ft</text>
           </g>
         )}
-        <text x="120" y="130" fontSize="10" fill="var(--ink-2)" textAnchor="middle">reservoir{dam.storage_acft ? ` · ${fmtInt(dam.storage_acft)} ac-ft` : ''}</text>
-        <text x="530" y="246" fontSize="10" fill="var(--ink-2)" textAnchor="middle">downstream</text>
-        <text x="310" y="256" fontSize="10" fill="var(--ink-2)" textAnchor="middle">{label}{dam.dam_types.length > 1 ? ` (+${dam.dam_types.slice(1).join(', ')})` : ''}</text>
+        <text className="lbl" x="120" y="130" fontSize="10" fill="var(--ink-2)" textAnchor="middle">reservoir{dam.storage_acft ? ` · ${fmtInt(dam.storage_acft)} ac-ft` : ''}</text>
+        <text className="lbl" x="530" y="246" fontSize="10" fill="var(--ink-2)" textAnchor="middle">downstream</text>
+        <text className="lbl" x="310" y="256" fontSize="10" fill="var(--ink-2)" textAnchor="middle">{label}{dam.dam_types.length > 1 ? ` (+${dam.dam_types.slice(1).join(', ')})` : ''}</text>
         {/* callouts */}
         {callouts.map((c) => (
           <g key={c.code} tabIndex={0} role="button" aria-label={`Issue ${c.n}: ${c.meta.title}`}
@@ -125,7 +125,7 @@ export default function DamSchematic({ dam, catalog }: { dam: Dam; catalog: Cata
         {active ? (
           <><strong>{callouts.find((c) => c.code === active)?.n}. {catalog.issues[active].title}</strong> — {lens === 'engineering' ? catalog.issues[active].eng : catalog.issues[active].plain}</>
         ) : (
-          <span className="muted">{issues.length ? 'Numbered markers show where each issue sits on the dam. Hover or focus one to read it; click to jump to the details.' : 'No issue markers: nothing adverse is on record for this dam.'}</span>
+          <span className="muted">{issues.length ? <>Numbered markers show where each issue sits on the dam. <span className="hide-sm">Hover or focus one to read it; click to jump to the details.</span><span className="show-sm">Tap one to jump to its details.</span></> : 'No issue markers: nothing adverse is on record for this dam.'}</span>
         )}
       </div>
     </div>

@@ -24,6 +24,7 @@ export default function Engineering() {
       <div className="grid grid-2" style={{ marginTop: 24 }}>
         <div className="card">
           <h2>Failure-mode library</h2>
+          <div className="table-scroll" tabIndex={0}>
           <table className="data">
             <thead><tr><th>Mode</th><th>Typical indicators in inventory data</th><th>First analysis</th></tr></thead>
             <tbody>
@@ -36,6 +37,7 @@ export default function Engineering() {
               <tr><td>Seismic</td><td>High-seismicity state, hydraulic fill, liquefiable foundation</td><td>Deformation analysis; liquefaction screening</td></tr>
             </tbody>
           </table>
+          </div>
         </div>
         <div className="card">
           <h2>Standards and references</h2>

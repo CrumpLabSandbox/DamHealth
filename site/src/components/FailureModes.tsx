@@ -4,6 +4,7 @@ import type { Dam } from '../lib/types'
 export default function FailureModes({ dam }: { dam: Dam }) {
   const modes = failureModes(dam)
   return (
+    <div className="table-scroll" tabIndex={0}>
     <table className="data">
       <thead><tr><th>Potential failure mode</th><th>Screening relevance</th><th>Why</th></tr></thead>
       <tbody>
@@ -16,5 +17,6 @@ export default function FailureModes({ dam }: { dam: Dam }) {
         ))}
       </tbody>
     </table>
+    </div>
   )
 }

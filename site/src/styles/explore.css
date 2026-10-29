@@ -1,4 +1,4 @@
-.explore { display: flex; flex-direction: column; height: calc(100vh - 62px); min-height: 560px; }
+.explore { display: flex; flex-direction: column; height: calc(100vh - 90px); min-height: 560px; }
 .explore-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; width: 100%; max-width: none; }
 .explore-body { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); min-height: 0; border-top: 1px solid var(--hairline); }
 .explore-map { position: relative; min-height: 320px; background: var(--surface-2); }
@@ -12,9 +12,25 @@
 dl.attr { display: grid; grid-template-columns: minmax(120px, 170px) 1fr; gap: 6px 12px; margin: 0; }
 dl.attr dt { color: var(--ink-2); font-size: 0.875rem; }
 dl.attr dd { margin: 0; }
+.explore-selects, .explore-actions { display: contents; }
+.explore-spacer { flex: 1; }
+.back-to-map { display: none; margin: 0 0 8px; }
 @media (max-width: 860px) {
-  .explore { height: auto; }
+  .explore { height: auto; min-height: 0; }
+  .explore-filters { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  .explore-selects { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .explore-selects label { display: flex; flex-direction: column; gap: 2px; }
+  .explore-selects select { width: 100%; min-height: 40px; }
+  .explore-spacer { display: none; }
+  .explore-actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .explore-actions .btn { justify-content: center; padding: 6px 4px; font-size: 0.8125rem; white-space: nowrap; }
   .explore-body { grid-template-columns: 1fr; }
-  .explore-map { height: 52vh; }
-  .explore-panel { border-left: 0; border-top: 1px solid var(--hairline); }
+  .explore-map { height: 58vh; min-height: 300px; scroll-margin-top: 64px; }
+  .explore-panel { border-left: 0; border-top: 1px solid var(--hairline); scroll-margin-top: 64px; }
+  .back-to-map { display: block; }
+  .explore-legend { left: 6px; right: 52px; top: 6px; bottom: auto; gap: 2px 8px; padding: 4px 8px; font-size: 0.75rem; }
+  .map-status { top: auto; bottom: 30px; }
+}
+@media (max-width: 400px) {
+  .explore-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

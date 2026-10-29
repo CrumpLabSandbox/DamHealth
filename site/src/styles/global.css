@@ -16,6 +16,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .hero .btn-primary { background: #ffffff; border-color: #ffffff; color: var(--brand); }
 a:hover { text-decoration-thickness: 2px; }
 button, input, select { font: inherit; color: inherit; }
+select { max-width: 100%; }
+label { max-width: 100%; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
 h1, h2, h3, h4 { line-height: 1.2; margin: 0 0 0.5em; letter-spacing: -0.01em; }
 h1 { font-size: clamp(1.75rem, 2.5vw + 1rem, 2.75rem); }
@@ -37,6 +39,8 @@ p { margin: 0 0 1em; }
 .grid-3 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .stack > * + * { margin-top: 12px; }
+.gauge-grid { grid-template-columns: minmax(160px, 200px) 1fr; gap: 16px; align-items: center; }
+@media (max-width: 520px) { .gauge-grid { grid-template-columns: 1fr; } }
 .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .spread { justify-content: space-between; }
 
@@ -66,6 +70,10 @@ table.data th, table.data td { text-align: left; padding: 8px 10px; border-botto
 table.data th { color: var(--ink-2); font-weight: 600; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.04em; }
 table.data td.num, table.data th.num { text-align: right; font-variant-numeric: tabular-nums; }
 table.data tbody tr:hover { background: var(--surface-2); }
+.table-scroll { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+.table-scroll + * { margin-top: 12px; }
+/* Long source URLs wrap instead of widening the page. */
+main :is(p, li, td) a { overflow-wrap: anywhere; }
 
 .hero { background: var(--brand); color: var(--brand-ink); padding: 48px 0 40px; }
 .hero a { color: #ffffff; }
@@ -76,6 +84,7 @@ table.data tbody tr:hover { background: var(--surface-2); }
 .stat.on-dark { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.14); color: #fff; }
 .stat.on-dark .label { color: #cfdbe6; }
 
+.draft-banner { background: var(--grade-c); color: var(--grade-c-ink); font-size: 0.8125rem; line-height: 1.35; text-align: center; padding: 5px var(--gutter); }
 .site-header { background: var(--surface); border-bottom: 1px solid var(--hairline); position: sticky; top: 0; z-index: 50; }
 .site-header .wrap { display: flex; align-items: center; gap: 16px; min-height: 60px; flex-wrap: wrap; padding-top: 6px; padding-bottom: 6px; }
 .brand { font-weight: 800; letter-spacing: -0.02em; text-decoration: none; color: var(--ink); font-size: 1.2rem; display: inline-flex; gap: 8px; align-items: center; }
@@ -85,6 +94,11 @@ table.data tbody tr:hover { background: var(--surface-2); }
 .nav a:hover { background: var(--surface-2); color: var(--ink); }
 .nav a[aria-current="page"] { color: var(--ink); background: var(--surface-2); font-weight: 700; }
 .header-tools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.header-search { min-width: 220px; flex: 1; }
+/* Desktop: the menu wrapper is transparent to the header's flex layout. */
+.site-menu, .theme-desktop { display: contents; }
+.header-phone-tools { display: none; }
+.menu-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--hairline); background: var(--surface-2); font-weight: 600; cursor: pointer; }
 
 .lens-switch { display: inline-flex; border: 1px solid var(--hairline); border-radius: 999px; padding: 3px; background: var(--surface-2); }
 .lens-switch button { border: 0; background: transparent; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-weight: 600; color: var(--ink-2); min-height: 36px; }
@@ -103,16 +117,64 @@ table.data tbody tr:hover { background: var(--surface-2); }
 .callout.warn { border-color: var(--grade-d); }
 .callout.crit { border-color: var(--grade-f); }
 
-.section { padding: 32px 0; }
+.section { padding-top: 32px; padding-bottom: 32px; }
 .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .prose { max-width: 72ch; }
 .prose h2 { margin-top: 1.5em; }
 .prose li { margin-bottom: 0.35em; }
+.prose pre { overflow-x: auto; max-width: 100%; }
+.prose :not(pre) > code { overflow-wrap: anywhere; }
+
+/* Phones and small tablets: compact header with a menu. */
+@media (max-width: 760px) {
+  .site-header .wrap { gap: 8px; min-height: 56px; }
+  .brand { font-size: 1.1rem; }
+  .header-phone-tools { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+  .theme-desktop { display: none; }
+  .site-menu { display: none; width: 100%; padding: 4px 0 12px; max-height: calc(100vh - 64px); overflow-y: auto; }
+  .site-header.menu-open .site-menu { display: block; }
+  .site-menu .nav { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .site-menu .nav a { padding: 12px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: 10px; }
+  .header-tools { flex-direction: column; align-items: stretch; margin: 12px 0 0; gap: 10px; }
+  .header-search { min-width: 0; width: 100%; }
+  .lens-switch { display: flex; width: 100%; }
+  .lens-switch button { flex: 1; min-height: 40px; }
+}
 
 @media (max-width: 720px) {
-  .hero { padding: 32px 0; }
-  .stat .value { font-size: 1.6rem; }
-  .header-tools { margin-left: 0; width: 100%; justify-content: space-between; }
+  .hero { padding: 24px 0 28px; }
+  .hero .lede { font-size: 1.05rem; }
+  .hero .row .btn { flex: 1 1 auto; justify-content: center; }
+  .section { padding-top: 24px; padding-bottom: 24px; }
+  .draft-banner { font-size: 0.75rem; padding: 4px 12px; }
+  .card { padding: 16px; }
+  .grid { gap: 12px; }
+  /* Stat tiles two across instead of one tall column. */
+  .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat { padding: 12px; }
+  .stat .value { font-size: 1.35rem; overflow-wrap: anywhere; }
+  .stat .label { font-size: 0.8125rem; }
+  table.data { font-size: 0.875rem; }
+  table.data th, table.data td { padding: 7px 6px; }
+  table.data th { font-size: 0.75rem; letter-spacing: 0.02em; }
+  .hide-sm { display: none !important; }
+  /* 16px form controls stop iOS Safari from zooming in on focus. */
+  input, select, textarea { font-size: 16px !important; }
+  .section-title { margin-bottom: 12px; }
+}
+@media (min-width: 721px) { .show-sm { display: none !important; } }
+/* Phone timeline: a vertical list in place of the horizontal drawing. */
+.timeline-list { list-style: none; margin: 0; padding: 0 0 0 4px; border-left: 2px solid var(--axis); }
+.timeline-list li { position: relative; padding: 6px 0 6px 18px; font-size: 0.9375rem; }
+.timeline-list .tl-dot { position: absolute; left: -7px; top: 12px; width: 12px; height: 12px; border-radius: 50%; background: var(--ink-2); border: 2px solid var(--surface); }
+.timeline-list .tl-now { font-weight: 700; }
+.timeline-list .tl-now .tl-dot { background: var(--accent-fill); }
+.timeline-list .tl-plan { color: var(--accent); }
+.timeline-list .tl-plan .tl-dot { background: var(--surface); border-color: var(--accent-fill); }
+/* Drawing labels sit in a 600-unit-wide picture; enlarge them when it is phone-sized. */
+@media (max-width: 520px) {
+  svg text.lbl { font-size: 16px; }
+  svg text.lbl-sm { font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

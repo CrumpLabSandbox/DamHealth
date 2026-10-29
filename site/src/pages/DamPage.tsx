@@ -60,7 +60,7 @@ export default function DamPage() {
           </p>
           <div className="row" style={{ alignItems: 'center', gap: 16 }}>
             <GradeBadge grade={dam.grade} size="lg" />
-            <div>
+            <div style={{ flex: '1 1 200px', minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: '1.25rem' }}>{GRADE_WORDS[dam.grade]} — Dam Health Index {dam.scores.dhi}</div>
               <div className="muted">{GRADE_SENTENCE[dam.grade]}</div>
               <div className="small muted">Data confidence: <strong>{dam.confidence}</strong>{dam.coverage === 'current' ? ` · NID data as of ${dam.attr_date}` : dam.coverage === '2019' ? ' · newest record 2019' : ' · includes March 2026 data'}</div>

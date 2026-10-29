@@ -21,8 +21,8 @@ export default function HealthGauge({ scores, grade }: { scores: { condition: nu
   // Grade band ticks at 20/30/45/60
   const bands = [[0, 20, 'a'], [20, 30, 'b'], [30, 45, 'c'], [45, 60, 'd'], [60, 100, 'f']] as const
   return (
-    <div className="grid" style={{ gridTemplateColumns: 'minmax(160px, 200px) 1fr', gap: 16, alignItems: 'center' }}>
-      <svg viewBox="0 0 180 100" role="img" aria-label={`Dam Health Index ${scores.dhi} of 100, grade ${grade}`} style={{ width: '100%', maxWidth: 220 }}>
+    <div className="grid gauge-grid">
+      <svg viewBox="0 0 180 100" role="img" aria-label={`Dam Health Index ${scores.dhi} of 100, grade ${grade}`} style={{ width: '100%', maxWidth: 220, margin: '0 auto' }}>
         {bands.map(([a, b, g]) => (
           <path key={g} d={arc(start - (Math.PI * a) / 100, start - (Math.PI * b) / 100)} fill="none" stroke={`var(--grade-${g})`} strokeWidth="6" opacity="0.28" strokeLinecap="butt" />
         ))}
@@ -35,7 +35,7 @@ export default function HealthGauge({ scores, grade }: { scores: { condition: nu
       <div>
         {SUBS.map((s) => (
           <div key={s.key} style={{ margin: '6px 0' }}>
-            <div className="row spread small"><span><strong>{s.label}</strong> <span className="muted">· {s.plain}</span></span><span className="tabular">{Math.round(scores[s.key])}</span></div>
+            <div className="row spread small" style={{ flexWrap: 'nowrap', alignItems: 'flex-start' }}><span style={{ minWidth: 0 }}><strong>{s.label}</strong> <span className="muted">· {s.plain}</span></span><span className="tabular">{Math.round(scores[s.key])}</span></div>
             <div style={{ height: 8, background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden' }} aria-hidden="true">
               <div style={{ width: `${scores[s.key]}%`, height: '100%', background: 'var(--accent-fill)', borderRadius: '0 4px 4px 0' }} />
             </div>

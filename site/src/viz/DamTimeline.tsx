@@ -26,7 +26,13 @@ export default function DamTimeline({ dam }: { dam: Dam }) {
   // Alternate label rows and nudge labels that would collide.
   const placed = all.map((e, i) => ({ ...e, row: i % 2 }))
   return (
-    <svg viewBox="0 0 600 120" role="img" aria-label={`Timeline: ${all.map((e) => e.label).join('; ')}`} style={{ width: '100%', height: 'auto' }}>
+    <>
+    <ol className="timeline-list show-sm" aria-label="Timeline">
+      {all.map((e) => (
+        <li key={e.label} className={`tl-${e.kind}`}><span className="tl-dot" aria-hidden="true" />{e.kind === 'plan' ? `${e.year} · ${e.label.replace(/^Yr (\d+) · /, 'year $1: ')}` : e.label}</li>
+      ))}
+    </ol>
+    <svg className="hide-sm" viewBox="0 0 600 120" role="img" aria-label={`Timeline: ${all.map((e) => e.label).join('; ')}`} style={{ width: '100%', height: 'auto' }}>
       <line x1="20" y1="62" x2="350" y2="62" stroke="var(--axis)" strokeWidth="2" />
       <line x1="350" y1="62" x2="580" y2="62" stroke="var(--accent-fill)" strokeWidth="2" strokeDasharray="4 4" />
       <rect x="350" y="52" width="230" height="20" fill="var(--accent-fill)" opacity="0.08" />
@@ -41,5 +47,6 @@ export default function DamTimeline({ dam }: { dam: Dam }) {
       <text x="350" y="114" fontSize="8" fill="var(--ink-3)" textAnchor="middle">{NOW}</text>
       <text x="580" y="114" fontSize="8" fill="var(--ink-3)" textAnchor="end">{NOW + 10}</text>
     </svg>
+    </>
   )
 }

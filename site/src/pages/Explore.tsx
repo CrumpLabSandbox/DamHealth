@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import DamMap from '../components/DamMap'
 import { US_BOUNDS } from '../lib/map'
@@ -22,6 +22,11 @@ export default function Explore() {
   const [dam, setDam] = useState<Dam | null>(null)
   const [mapOk, setMapOk] = useState(true)
   const [userPos, setUserPos] = useState<[number, number] | null>(null)
+  const panelRef = useRef<HTMLElement>(null)
+  const mapBoxRef = useRef<HTMLDivElement>(null)
+  // On phones the details panel sits below the map; bring it into view when a dam is picked.
+  const narrow = () => window.matchMedia('(max-width: 860px)').matches
+  const lastShown = useRef<string | null>(null)
 
   const selected = params.get('dam')
   const grade = (params.get('grade') ?? 'all') as Grade | 'all'
@@ -46,6 +51,11 @@ export default function Explore() {
     loadDam(selected).then((d) => alive && setDam(d))
     return () => { alive = false }
   }, [selected])
+  useEffect(() => {
+    if (!dam || lastShown.current === dam.nid_id) return
+    lastShown.current = dam.nid_id
+    if (narrow()) panelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [dam])
 
   const go = useCallback((i: number) => { if (ordered[i]) set('dam', ordered[i].id) }, [ordered]) // eslint-disable-line react-hooks/exhaustive-deps
   const random = () => { if (filtered.length) set('dam', filtered[Math.floor(Math.random() * filtered.length)].id) }
@@ -64,18 +74,22 @@ export default function Explore() {
   return (
     <div className="explore">
       <div className="explore-filters wrap">
+        <div className="explore-selects">
         <label className="small">Grade{' '}<select value={grade} onChange={(e) => set('grade', e.target.value)}><option value="all">All</option>{(['F', 'D', 'C', 'B', 'A'] as Grade[]).map((g) => <option key={g} value={g}>{g}</option>)}</select></label>
         <label className="small">Hazard{' '}<select value={hz} onChange={(e) => set('hz', e.target.value)}><option value="all">All</option><option value="H">High</option><option value="S">Significant</option><option value="L">Low</option><option value="U">Undetermined</option></select></label>
         <label className="small">State{' '}<select value={st} onChange={(e) => set('st', e.target.value)}><option value="all">All</option>{states.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
-        <span className="small muted">{rows ? `${fmtInt(filtered.length)} dams` : 'Loading 92,000 dams…'}</span>
-        <span style={{ flex: 1 }} />
+        </div>
+        <span className="small muted explore-count">{rows ? `${fmtInt(filtered.length)} dams` : 'Loading 92,000 dams…'}</span>
+        <span className="explore-spacer" />
+        <div className="explore-actions">
         <button className="btn btn-sm" onClick={() => go(idx <= 0 ? ordered.length - 1 : idx - 1)} disabled={!ordered.length} aria-label="Previous dam (worse)">‹ Prev</button>
         <button className="btn btn-sm" onClick={() => go(idx < 0 ? 0 : (idx + 1) % ordered.length)} disabled={!ordered.length} aria-label="Next dam">Next ›</button>
         <button className="btn btn-sm" onClick={random} disabled={!filtered.length}>Random dam</button>
         <button className="btn btn-sm" onClick={nearMe} disabled={!filtered.length}>Dams near me</button>
+        </div>
       </div>
       <div className="explore-body">
-        <div className="explore-map">
+        <div className="explore-map" ref={mapBoxRef}>
           <DamMap
             rows={filtered}
             fit={st === 'all' ? US_BOUNDS : 'rows'}
@@ -87,7 +101,8 @@ export default function Explore() {
           />
           {!mapOk && <div className="callout warn small" style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>Map tiles could not load (offline?). Use the filters and Next/Random buttons, or <Link to="/states">browse by state</Link>.</div>}
         </div>
-        <aside className="explore-panel" aria-live="polite" aria-label="Selected dam">
+        <aside className="explore-panel" aria-live="polite" aria-label="Selected dam" ref={panelRef}>
+          {selected && <p className="back-to-map small"><button className="linklike" onClick={() => mapBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>↑ Back to map</button></p>}
           {!selected && (
             <div className="stack">
               <h2>Pick a dam</h2>
