@@ -68,6 +68,7 @@ export interface Rollup {
   hazard: Record<string, number>
   condition: Record<string, number>
   high_hazard: number
+  mean_dhi_high?: number | null
   high_poor_unsat: number
   high_not_rated: number
   high_no_eap: number

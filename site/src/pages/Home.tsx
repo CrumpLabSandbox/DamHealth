@@ -54,11 +54,11 @@ export default function Home() {
           <div className="card">
             <h3>All {fmtInt(n.dams)} dams</h3>
             <GradeDistribution grades={n.grades} />
-            <p className="muted small">Most dams grade B only because little is on record for them: condition ratings exist only for high-hazard dams. A low-confidence B means "nothing bad is published", not "safe".</p>
+            <p className="muted small">{fmtInt((n.condition['Not Rated'] ?? 0) + (n.condition['None'] ?? 0))} dams have no published condition rating, so many A and B grades mean "nothing bad is published", not "safe". Check each dam's data confidence.</p>
           </div>
           <div className="card">
             <h3>Where the problems are</h3>
-            <StateChoropleth states={data.states} metric="high_poor_unsat" />
+            <StateChoropleth states={data.states} metric="avg_grade_high" />
           </div>
         </div>
       </section>

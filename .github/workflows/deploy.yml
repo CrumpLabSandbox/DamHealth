@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Fetch raw inventory mirrors
+      - name: Fetch current NID export
         run: bash data/pipeline/fetch_raw.sh
 
       - name: Run data pipeline

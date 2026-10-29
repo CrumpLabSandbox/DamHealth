@@ -123,6 +123,7 @@ def rollup(rows: list[dict]) -> dict:
         "issues": dict(issues.most_common()),
         "plan_status": dict(ps),
         "mean_dhi": round(sum(r["scores"]["dhi"] for r in rows) / len(rows), 1) if rows else None,
+        "mean_dhi_high": round(sum(r["scores"]["dhi"] for r in high) / len(high), 1) if high else None,
         "median_year": sorted(years)[len(years) // 2] if years else None,
         "cost_low_usd": sum((r["cost"] or {}).get("low_usd", 0) for r in rows),
         "cost_high_usd": sum((r["cost"] or {}).get("high_usd", 0) for r in rows),

@@ -3,6 +3,9 @@
 .explore-body { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 440px); min-height: 0; border-top: 1px solid var(--hairline); }
 .explore-map { position: relative; min-height: 320px; background: var(--surface-2); }
 .explore-legend { position: absolute; left: 10px; bottom: 10px; background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 6px 10px; display: flex; gap: 10px; flex-wrap: wrap; }
+.map-status { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); background: var(--surface); border: 1px solid var(--hairline); border-radius: 999px; padding: 4px 12px; pointer-events: none; }
+.state-map { position: relative; height: 460px; border: 1px solid var(--hairline); border-radius: 12px; overflow: hidden; background: var(--surface-2); margin-bottom: 16px; }
+@media (max-width: 860px) { .state-map { height: 360px; } }
 .explore-panel { overflow: auto; padding: 16px; border-left: 1px solid var(--hairline); background: var(--surface); }
 .linklike { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; cursor: pointer; text-align: left; }
 .maplibregl-ctrl-attrib { font-size: 10px; }

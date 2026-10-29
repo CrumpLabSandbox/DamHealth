@@ -1,8 +1,7 @@
-import * as maplibregl from 'maplibre-gl'
-import type { GeoJSONSource, Map as MLMap } from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import DamMap from '../components/DamMap'
+import { US_BOUNDS } from '../lib/map'
 import GradeBadge from '../components/GradeBadge'
 import IssueList from '../components/IssueList'
 import { loadDam, loadIndex } from '../lib/data'
@@ -13,29 +12,16 @@ import type { Dam, Grade, HazardCode, IndexRow } from '../lib/types'
 import HealthGauge from '../viz/HealthGauge'
 import DamSchematic from '../viz/DamSchematic'
 
-const GRADE_HEX: Record<Grade, string> = { A: '#0ca30c', B: '#2a78d6', C: '#eda100', D: '#e34948', F: '#9e2b4a' }
-const US_BOUNDS: [[number, number], [number, number]] = [[-125, 24], [-66, 50]]
-
-const STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: { type: 'raster', tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'], tileSize: 256, attribution: '© OpenStreetMap contributors', maxzoom: 19 },
-  },
-  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-}
-
 export default function Explore() {
   useTitle('Explore dams')
   const { lens } = useLens()
   const nav = useNavigate()
   const [params, setParams] = useSearchParams()
   const cat = useCatalog().data
-  const mapRef = useRef<MLMap | null>(null)
-  const divRef = useRef<HTMLDivElement>(null)
   const [rows, setRows] = useState<IndexRow[] | null>(null)
   const [dam, setDam] = useState<Dam | null>(null)
   const [mapOk, setMapOk] = useState(true)
-  const [mapReady, setMapReady] = useState(false)
+  const [userPos, setUserPos] = useState<[number, number] | null>(null)
 
   const selected = params.get('dam')
   const grade = (params.get('grade') ?? 'all') as Grade | 'all'
@@ -61,62 +47,6 @@ export default function Explore() {
     return () => { alive = false }
   }, [selected])
 
-  // Map init
-  useEffect(() => {
-    if (!divRef.current || mapRef.current) return
-    let map: MLMap
-    try {
-      map = new maplibregl.Map({ container: divRef.current, style: STYLE, bounds: US_BOUNDS, fitBoundsOptions: { padding: 20 }, attributionControl: { compact: true } })
-    } catch { setMapOk(false); return }
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
-    map.on('error', (e) => { if (/tile|style/i.test(String(e.error?.message))) setMapOk(false) })
-    map.on('load', () => {
-      map.addSource('dams', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, cluster: true, clusterRadius: 40, clusterMaxZoom: 9, clusterProperties: { worst: ['max', ['get', 'dhi']] } })
-      map.addLayer({ id: 'clusters', type: 'circle', source: 'dams', filter: ['has', 'point_count'], paint: {
-        'circle-color': ['step', ['get', 'worst'], GRADE_HEX.B, 30, GRADE_HEX.C, 45, GRADE_HEX.D, 60, GRADE_HEX.F],
-        'circle-opacity': 0.75, 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5,
-        'circle-radius': ['step', ['get', 'point_count'], 12, 50, 16, 250, 20, 1000, 26, 5000, 32] } })
-      map.addLayer({ id: 'cluster-count', type: 'symbol', source: 'dams', filter: ['has', 'point_count'], layout: { 'text-field': ['get', 'point_count_abbreviated'], 'text-size': 11 }, paint: { 'text-color': '#fff' } })
-      map.addLayer({ id: 'points', type: 'circle', source: 'dams', filter: ['!', ['has', 'point_count']], paint: {
-        'circle-color': ['match', ['get', 'grade'], 'A', GRADE_HEX.A, 'B', GRADE_HEX.B, 'C', GRADE_HEX.C, 'D', GRADE_HEX.D, GRADE_HEX.F],
-        'circle-radius': ['case', ['==', ['get', 'hz'], 'H'], 7, 5], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } })
-      map.addLayer({ id: 'selected', type: 'circle', source: 'dams', filter: ['==', ['get', 'id'], ''], paint: { 'circle-radius': 12, 'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#0b0b0b', 'circle-stroke-width': 3 } })
-      map.on('click', 'clusters', (e) => {
-        const f = e.features?.[0]; if (!f) return
-        const src = map.getSource('dams') as GeoJSONSource
-        src.getClusterExpansionZoom(f.properties!.cluster_id as number).then((z) => map.easeTo({ center: (f.geometry as GeoJSON.Point).coordinates as [number, number], zoom: z }))
-      })
-      map.on('click', 'points', (e) => { const f = e.features?.[0]; if (f) set('dam', f.properties!.id as string) })
-      map.on('mouseenter', 'points', () => { map.getCanvas().style.cursor = 'pointer' })
-      map.on('mouseleave', 'points', () => { map.getCanvas().style.cursor = '' })
-      map.on('mouseenter', 'clusters', () => { map.getCanvas().style.cursor = 'pointer' })
-      map.on('mouseleave', 'clusters', () => { map.getCanvas().style.cursor = '' })
-      mapRef.current = map
-      setMapReady(true)
-    })
-    return () => { map.remove(); mapRef.current = null }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Push filtered data to map
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !map.getSource('dams')) return
-    const fc: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: filtered.filter((r) => r.lat != null && r.lon != null).map((r) => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [r.lon!, r.lat!] }, properties: { id: r.id, grade: r.grade, hz: r.hz, dhi: r.dhi, name: r.name } })) }
-    ;(map.getSource('dams') as GeoJSONSource).setData(fc)
-  }, [filtered, mapOk, mapReady])
-
-  // Highlight + fly to selection
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map || !map.getLayer('selected')) return
-    map.setFilter('selected', ['==', ['get', 'id'], selected ?? ''])
-    if (dam?.lat != null && dam.lon != null) {
-      const z = map.getZoom()
-      map.easeTo({ center: [dam.lon, dam.lat], zoom: Math.max(z, 9), duration: 600 })
-    }
-  }, [dam, selected, mapReady])
-
   const go = useCallback((i: number) => { if (ordered[i]) set('dam', ordered[i].id) }, [ordered]) // eslint-disable-line react-hooks/exhaustive-deps
   const random = () => { if (filtered.length) set('dam', filtered[Math.floor(Math.random() * filtered.length)].id) }
   const nearMe = () => {
@@ -125,7 +55,7 @@ export default function Explore() {
       let best: IndexRow | null = null, bd = Infinity
       for (const r of filtered) { if (r.lat == null || r.lon == null) continue; const d = Math.hypot((r.lat - latitude) * 111, (r.lon - longitude) * 111 * Math.cos(latitude * Math.PI / 180)); if (d < bd) { bd = d; best = r } }
       if (best) set('dam', best.id)
-      mapRef.current?.easeTo({ center: [longitude, latitude], zoom: 10 })
+      else setUserPos([longitude, latitude])
     }, () => alert('Location unavailable. You can search by name instead.'))
   }
 
@@ -146,17 +76,22 @@ export default function Explore() {
       </div>
       <div className="explore-body">
         <div className="explore-map">
-          <div ref={divRef} style={{ position: 'absolute', inset: 0 }} aria-label="Map of dams; click a point to select a dam" role="application" />
+          <DamMap
+            rows={filtered}
+            fit={st === 'all' ? US_BOUNDS : 'rows'}
+            onSelect={(id) => set('dam', id)}
+            selectedId={selected}
+            focus={dam?.lat != null && dam.lon != null ? [dam.lon, dam.lat] : userPos}
+            ariaLabel="Map of dams; click a point to select a dam"
+            onTilesFailed={() => setMapOk(false)}
+          />
           {!mapOk && <div className="callout warn small" style={{ position: 'absolute', left: 12, right: 12, bottom: 12 }}>Map tiles could not load (offline?). Use the filters and Next/Random buttons, or <Link to="/states">browse by state</Link>.</div>}
-          <div className="explore-legend small" aria-hidden="true">
-            {(['A', 'B', 'C', 'D', 'F'] as Grade[]).map((g) => <span key={g} className="row" style={{ gap: 4 }}><span style={{ width: 10, height: 10, borderRadius: '50%', background: GRADE_HEX[g], display: 'inline-block' }} />{g} {GRADE_WORDS[g]}</span>)}
-          </div>
         </div>
         <aside className="explore-panel" aria-live="polite" aria-label="Selected dam">
           {!selected && (
             <div className="stack">
               <h2>Pick a dam</h2>
-              <p className="muted">Click a point on the map, press <strong>Next</strong> to step through dams from worst to best, or try <strong>Random dam</strong>. Markers and clusters are colored by grade; larger points are high-hazard dams.</p>
+              <p className="muted">Click a point on the map, press <strong>Next</strong> to step through dams from worst to best, or try <strong>Random dam</strong>. Every dam is a dot colored by its grade, with the worst drawn on top; larger dots are high-hazard dams.</p>
               {ordered.length > 0 && (
                 <>
                   <h3>Worst in view of your filters</h3>

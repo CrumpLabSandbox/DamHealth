@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import DamMap from '../components/DamMap'
 import GradeBadge from '../components/GradeBadge'
 import Loading, { ErrorBox } from '../components/Loading'
 import StatTile from '../components/StatTile'
@@ -15,11 +16,12 @@ type SortKey = 'dhi' | 'name' | 'storage' | 'year'
 export default function StatePage() {
   const { st = '' } = useParams()
   const { lens } = useLens()
+  const nav = useNavigate()
   const { data, error } = useAsync(() => loadState(st), [st])
   const cat = useCatalog().data
   useTitle(data ? `${data.name} dams` : 'State')
   const [grade, setGrade] = useState<Grade | 'all'>('all')
-  const [highOnly, setHighOnly] = useState(true)
+  const [highOnly, setHighOnly] = useState(false)
   const [sort, setSort] = useState<SortKey>('dhi')
   const [limit, setLimit] = useState(100)
 
@@ -68,6 +70,7 @@ export default function StatePage() {
       </div>
 
       <h2 style={{ marginTop: 32 }}>Dams in {data.name}</h2>
+      <p className="muted small">Every dam with coordinates is a dot colored by its grade, with the worst drawn on top; larger dots are high-hazard dams. The map and table follow the filters below. Click a dot to open that dam.</p>
       <div className="row" style={{ marginBottom: 12 }}>
         <label className="row"><input type="checkbox" checked={highOnly} onChange={(e) => setHighOnly(e.target.checked)} /> High-hazard only</label>
         <label>Grade{' '}
@@ -81,6 +84,9 @@ export default function StatePage() {
           </select>
         </label>
         <span className="muted small">{fmtInt(rows.length)} dams</span>
+      </div>
+      <div className="state-map">
+        <DamMap rows={rows} fit="rows" onSelect={(id) => nav(`/dam/${id}`)} ariaLabel={`Map of dams in ${data.name}; click a dot to open a dam`} />
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table className="data">

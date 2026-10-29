@@ -105,7 +105,7 @@ export default function Dashboard() {
       <div className="grid grid-2" style={{ marginTop: 16 }}>
         <div className="card">
           <h3>Hazard × condition</h3>
-          <p className="small muted">Condition ratings are published only for high-hazard dams, so the other rows are mostly blank — itself a finding.</p>
+          <p className="small muted">Many low- and significant-hazard dams have no published condition rating, so those rows are thinner than the high-hazard row — itself a finding.</p>
           <div style={{ overflowX: 'auto' }} tabIndex={0}>
             <table className="data small">
               <thead><tr><th>Hazard</th>{conds.map((c) => <th key={c} className="num">{c === 'None' ? 'No rating' : c}</th>)}<th className="num">Total</th></tr></thead>
