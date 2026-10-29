@@ -185,7 +185,7 @@ Hand-written, cited narratives for ~20 dams: what happened or is at risk, cost, 
 - **Search**: MiniSearch over name/state/county/river in `index.json`.
 - **Accessibility**: semantic HTML, skip links, focus management on route change, reduced-motion support, color never the sole channel (grade letter + pattern), tested with axe-core in CI.
 - **Tests**: Python pytest for pipeline (schema, merge counts, scoring invariants); Vitest for scoring/formatting utilities; Playwright smoke + axe.
-- **Deploy**: GitHub Pages via Actions on push to `master` (Pages already enabled with the Actions source); `npm run build` also runs the pipeline check. Client-side routing uses hash-free URLs with a `404.html` fallback so `/dam/CA00232` deep links work on Pages.
+- **Deploy**: GitHub Pages via Actions on push to `main` (Pages already enabled with the Actions source); `npm run build` also runs the pipeline check. Client-side routing uses hash-free URLs with a `404.html` fallback so `/dam/CA00232` deep links work on Pages.
 - **Runtime data**: Wikipedia REST + Wikimedia Commons APIs (CORS, no key) for photos/history; Census county population bundled at build time; everything else static JSON.
 
 ---
