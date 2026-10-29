@@ -10,6 +10,10 @@ Live site: https://crumplabsandbox.github.io/DamHealth/ (deployed from `main` by
 
 Every dam page ends with a **Sources & verification** panel that lists, field by field, where each value came from (the official NID record for that ID, the snapshot date and mirror commit, the Census vintage, or the cited URL for a curated plan-status row) and the exact inventory field that triggered each issue. Grades, scores, costs, breach estimates and plans are labelled *computed by DamHealth* and never presented as facts about the dam. The national `/dashboard` prints the same provenance manifest.
 
+## Reproducibility
+
+Every count, grade and chart is recomputed from the NID export on each build; nothing from the inventory is typed by hand, and a test enforces that. The Dashboard and Methodology pages show a "This build" panel with the NID snapshot date, the input file's SHA-256, the code commit and the build date. Each CI run keeps that exact input file and a hand-check report as a workflow artifact for 90 days. Figures from outside the inventory live in `data/curated/external_facts.json`. [RECHECK.md](RECHECK.md) lists what must be reviewed by hand and how.
+
 ## Layout
 
 ```

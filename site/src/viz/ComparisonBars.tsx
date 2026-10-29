@@ -1,11 +1,11 @@
-import { fmtInt } from '../lib/format'
+import { ageOf, fmtInt } from '../lib/format'
 import type { Dam, Rollup } from '../lib/types'
 
 /** This dam vs. state vs. nation — one measure per row, same axis per row. */
-export default function ComparisonBars({ dam, state, national }: { dam: Dam; state?: Rollup; national?: Rollup }) {
+export default function ComparisonBars({ dam, state, national, refYear }: { dam: Dam; state?: Rollup; national?: Rollup; refYear: number }) {
   const rows: { label: string; dam: number | null; state: number | null; nation: number | null; fmt: (n: number) => string }[] = [
     { label: 'Dam Health Index (0 best – 100 worst)', dam: dam.scores.dhi, state: state?.mean_dhi ?? null, nation: national?.mean_dhi ?? null, fmt: (n) => n.toFixed(0) },
-    { label: 'Age (years)', dam: dam.year_completed ? 2026 - dam.year_completed : null, state: state?.median_year ? 2026 - state.median_year : null, nation: national?.median_year ? 2026 - national.median_year : null, fmt: (n) => fmtInt(n) },
+    { label: 'Age (years)', dam: ageOf(dam.year_completed, refYear), state: ageOf(state?.median_year, refYear), nation: ageOf(national?.median_year, refYear), fmt: (n) => fmtInt(n) },
   ]
   return (
     <div>

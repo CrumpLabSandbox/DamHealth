@@ -2,14 +2,18 @@ import { Link } from 'react-router-dom'
 import Loading, { ErrorBox } from '../components/Loading'
 import Markdown from '../components/Markdown'
 import { fmtInt, fmtUSD } from '../lib/format'
-import { useSummary, useTitle } from '../lib/hooks'
+import { useCatalog, useSummary, useTitle } from '../lib/hooks'
 
 export default function NationalPlan() {
   useTitle('The national plan')
   const { data, error } = useSummary()
+  const cat = useCatalog().data
   if (error) return <ErrorBox message={error} />
-  if (!data) return <Loading what="national summary" />
+  if (!data || !cat) return <Loading what="national summary" />
   const n = data.national
+  // Figures from outside the inventory: data/curated/external_facts.json (checked by hand, see RECHECK.md).
+  const ext = cat.external
+  const num = (k: string) => Number(ext[k]?.value ?? 0)
   const ps = n.plan_status
   const noPlan = ps.no_public_plan ?? 0
   return (
@@ -57,7 +61,7 @@ export default function NationalPlan() {
 
       <div className="card" style={{ marginTop: 24 }}>
         <h2>What it costs, and who pays</h2>
-        <p className="prose">Our planning-level bands put the full rehabilitation of the nation's dams at <strong>{fmtUSD(n.cost_low_usd)}–{fmtUSD(n.cost_high_usd)}</strong>, bracketing ASDSO's 2025 estimate of $165.2 billion for non-federal dams ($37.4 billion for the high-hazard subset). Against that, FEMA's High Hazard Potential Dam Rehabilitation grant program received $585 million from the 2021 infrastructure law — and its FY2026 round was about $11 million. Private owners hold most of the problem dams and most lack the means to pay.</p>
+        <p className="prose">Our planning-level bands put the full rehabilitation of the nation's dams at <strong>{fmtUSD(n.cost_low_usd)}–{fmtUSD(n.cost_high_usd)}</strong>, compared with <a href={ext.asdso_nonfederal_usd?.url} rel="noopener">ASDSO's estimate</a> ({ext.asdso_nonfederal_usd?.as_of}) of {fmtUSD(num('asdso_nonfederal_usd'))} for non-federal dams ({fmtUSD(num('asdso_high_hazard_usd'))} for the high-hazard subset). Against that, FEMA's High Hazard Potential Dam Rehabilitation grant program received {fmtUSD(num('hhpd_iija_usd'))} from the 2021 infrastructure law — and its <a href={ext.hhpd_annual_usd?.url} rel="noopener">{ext.hhpd_annual_usd?.round ?? 'latest'} round</a> was about {fmtUSD(num('hhpd_annual_usd'))}. Private owners hold most of the problem dams and most lack the means to pay.</p>
         <h3>Policy asks</h3>
         <ol className="prose">
           <li><strong>Reauthorize and fund the HHPD Rehabilitation Grant Program</strong> at a level that matches the inventory — at least $1 billion a year for a decade.</li>

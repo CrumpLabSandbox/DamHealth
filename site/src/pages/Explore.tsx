@@ -79,7 +79,7 @@ export default function Explore() {
         <label className="small">Hazard{' '}<select value={hz} onChange={(e) => set('hz', e.target.value)}><option value="all">All</option><option value="H">High</option><option value="S">Significant</option><option value="L">Low</option><option value="U">Undetermined</option></select></label>
         <label className="small">State{' '}<select value={st} onChange={(e) => set('st', e.target.value)}><option value="all">All</option>{states.map((s) => <option key={s} value={s}>{s}</option>)}</select></label>
         </div>
-        <span className="small muted explore-count">{rows ? `${fmtInt(filtered.length)} dams` : 'Loading 92,000 dams…'}</span>
+        <span className="small muted explore-count">{rows ? `${fmtInt(filtered.length)} dams` : 'Loading dams…'}</span>
         <span className="explore-spacer" />
         <div className="explore-actions">
         <button className="btn btn-sm" onClick={() => go(idx <= 0 ? ordered.length - 1 : idx - 1)} disabled={!ordered.length} aria-label="Previous dam (worse)">‹ Prev</button>

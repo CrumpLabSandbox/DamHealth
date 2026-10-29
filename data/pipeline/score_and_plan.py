@@ -28,14 +28,18 @@ def norm_name(s: str | None) -> str:
     return " ".join(s.split())
 
 
-def load_curated_plan_status(dams: list[dict]) -> tuple[dict[str, dict], list[str]]:
-    """Return {nid_id: row}. Rows without nid_id are matched by normalized name within state;
-    when several dams match, the largest (by storage, then height) wins."""
+def load_curated_plan_status(dams: list[dict]) -> tuple[dict[str, dict], list[str], list[dict]]:
+    """Return {nid_id: row}, unmatched rows, and rows a person should verify.
+    Rows with nid_id are pinned to that dam. Rows without one are matched by normalized
+    name within state; when several dams match, the largest (by storage, then height) wins,
+    and the row is listed for hand-checking because a renamed NID record can move it."""
     path = CURATED / "plan_status.csv"
     out: dict[str, dict] = {}
     unmatched: list[str] = []
+    recheck: list[dict] = []
     if not path.exists():
-        return out, unmatched
+        return out, unmatched, recheck
+    known = {d["nid_id"]: d for d in dams}
     by_state: dict[str, dict[str, list[dict]]] = {}
     for d in dams:
         names = [d["name"]] + list(d.get("other_names") or [])
@@ -44,8 +48,13 @@ def load_curated_plan_status(dams: list[dict]) -> tuple[dict[str, dict], list[st
     with open(path, encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
             nid = (row.get("nid_id") or "").strip().upper()
+            label = f'{row.get("dam_name")} ({(row.get("state") or "").strip().upper()})'
+            if nid and nid not in known:
+                unmatched.append(f"{label} — pinned to {nid}, which is not in this NID snapshot")
+                recheck.append({"row": label, "issue": "pinned NID ID missing from snapshot", "nid_id": nid})
+                continue
             if not (row.get("source_url") or "").strip().startswith("http"):
-                unmatched.append(f'{row.get("dam_name")} ({row.get("state")}) — dropped: no source_url')
+                unmatched.append(f"{label} — dropped: no source_url")
                 continue
             if not nid:
                 st = (row.get("state") or "").strip().upper()
@@ -53,21 +62,26 @@ def load_curated_plan_status(dams: list[dict]) -> tuple[dict[str, dict], list[st
                 cands = by_state.get(st, {}).get(key, [])
                 if not cands and key:
                     # Prefix match: "Lake Dunlap" vs "Dunlap Dam Spillway" etc.
-                    cands = [d for k, lst in by_state.get(st, {}).items() if k and (k.startswith(key) or key.startswith(k)) for d in lst]
+                    # Both names need 5+ characters, or "Dam B" (normalized "b") would match any B-name.
+                    cands = [d for k, lst in by_state.get(st, {}).items() if len(k) >= 5 and len(key) >= 5 and (k.startswith(key) or key.startswith(k)) for d in lst]
                 if cands:
                     cands.sort(key=lambda d: ((d.get("storage_acft") or 0), (d.get("height_ft") or 0)), reverse=True)
                     nid = cands[0]["nid_id"]
                     row["match"] = "name+state"
+                    recheck.append({"row": label, "issue": "matched by name only; verify and pin nid_id",
+                                    "nid_id": nid, "matched_name": cands[0]["name"],
+                                    "candidates": len({c["nid_id"] for c in cands})})
                 else:
-                    unmatched.append(f'{row.get("dam_name")} ({st})')
+                    unmatched.append(label)
+                    recheck.append({"row": label, "issue": "no dam in this NID snapshot matches the name"})
                     continue
             out[nid] = row
-    return out, unmatched
+    return out, unmatched, recheck
 
 
 def main() -> None:
     dams = load_json(BUILD / "dams.json")
-    curated, unmatched = load_curated_plan_status(dams)
+    curated, unmatched, recheck = load_curated_plan_status(dams)
     grades, dhi_sum = Counter(), 0.0
     cost_lo = cost_hi = 0.0
     for r in dams:
@@ -92,6 +106,7 @@ def main() -> None:
         "cost_total_high_usd_billion": round(cost_hi / 1e9, 1),
         "high_hazard_grades": dict(sorted(Counter(r["grade"] for r in dams if r["hazard"] == "High").items())),
     }
+    report["curated_recheck"] = recheck
     dump_json(BUILD / "dams_scored.json", dams)
     dump_json(BUILD / "score_report.json", report, compact=False)
     print(json.dumps(report, indent=2))

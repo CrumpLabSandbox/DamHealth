@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom'
 import SearchBox from '../components/SearchBox'
-import { useTitle } from '../lib/hooks'
+import { fmtInt } from '../lib/format'
+import { useSummary, useTitle } from '../lib/hooks'
 
 export default function Community() {
   useTitle('Community guide')
+  const n = useSummary().data?.national
   return (
     <div className="wrap section">
       <h1>For communities: how to get your dam fixed</h1>
@@ -65,7 +67,7 @@ Sincerely,
 [DAM NAME] in [COUNTY] is a [HAZARD]-hazard dam rated [CONDITION], with [no public plan to fix it]. If it fails, people downstream could die. Planning-level estimates put repairs at [COST RANGE].
 
 I am asking you to:
-• Fund FEMA's High Hazard Potential Dam Rehabilitation grant program at a scale that matches the more than 2,600 high-hazard dams in poor or unsatisfactory condition nationwide;
+• Fund FEMA's High Hazard Potential Dam Rehabilitation grant program at a scale that matches the ${n ? fmtInt(n.high_poor_unsat) : '[number]'} high-hazard dams in poor or unsatisfactory condition nationwide;
 • Support state dam-safety staffing so inspections and ratings happen on schedule;
 • Require an Emergency Action Plan for every high-hazard dam.
 

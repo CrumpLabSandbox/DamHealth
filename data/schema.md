@@ -4,7 +4,7 @@ One JSON object per dam, keyed by `nid_id`. Built by `data/pipeline/build_datase
 
 | Source | Snapshot | Records | Fields |
 |---|---|---|---|
-| USACE National Inventory of Dams, full national export (`https://nid.sec.usace.army.mil/api/nation/csv` → `data/raw/nation.csv`) | first line "Data Last Updated" | ~92,700 rows, ~91,900 dams | 84 raw columns |
+| USACE National Inventory of Dams, full national export (`https://nid.sec.usace.army.mil/api/nation/csv` → `data/raw/nation.csv`) | first line "Data Last Updated" ({{nid.snapshot}} for this build) | {{nid.rows}} rows, {{national.dams}} dams | 84 raw columns |
 
 The current export is the default. Rows that share a NID ID (associated structures) are folded into the main structure. `coverage` is `current` and `attr_date` is the export's snapshot date for every record.
 
@@ -12,8 +12,8 @@ Legacy fallback, used only if the download fails:
 
 | Source | Snapshot | Records | Fields |
 |---|---|---|---|
-| USACE National Inventory of Dams, full export (mirror: `bcongdon/nid-data`) | 2019 | 91,457 | 70 raw columns |
-| USACE NID high-hazard-potential extract (mirror: `kalchikee/dam-failure-explorer`) | 2026-03-15 | 16,805 | 23 fields incl. condition, EAP, last inspection |
+| USACE National Inventory of Dams, full export (mirror: `bcongdon/nid-data`) | 2019 | {{sources.nid2019.records}} | 70 raw columns |
+| USACE NID high-hazard-potential extract (mirror: `kalchikee/dam-failure-explorer`) | 2026-03-15 | {{sources.nid2026hh.records}} | 23 fields incl. condition, EAP, last inspection |
 
 Legacy merge rule: records are joined on NID ID. For dams in both, the 2026 value replaces the 2019 value for every field the 2026 extract carries (`name, county, city, river, lat, lon, owner_name, owner_types, dam_types, purposes, year_completed, height_ft, max_storage_acft, hazard, condition, condition_date, eap, inspection_date, status`). All other fields come from 2019. `coverage` records which snapshots a dam appears in; `attr_date` is the date of the most recent snapshot that touched the record.
 

@@ -7,8 +7,17 @@ from __future__ import annotations
 
 from datetime import date
 
+# Ages are measured at the year of the NID snapshot the record came from, so a data
+# refresh moves them forward automatically. REFERENCE_YEAR is only the fallback for the
+# legacy 2019 + March 2026 build.
 REFERENCE_YEAR = 2026
 STALE_YEARS = 5
+
+
+def ref_year(r: dict) -> int:
+    if r.get("coverage") == "current" and r.get("attr_date"):
+        return int(r["attr_date"][:4])
+    return REFERENCE_YEAR
 
 
 def is_stale(r: dict) -> bool:
@@ -137,8 +146,8 @@ def detect_issues(r: dict) -> list[str]:
     yc = r.get("year_completed")
     ym = r.get("year_modified")
     if yc:
-        age = REFERENCE_YEAR - yc
-        recently_modified = ym is not None and REFERENCE_YEAR - ym <= 25
+        age = ref_year(r) - yc
+        recently_modified = ym is not None and ref_year(r) - ym <= 25
         if not recently_modified:
             if age >= 100:
                 issues.append("AGE_100")
@@ -286,7 +295,7 @@ def issue_facts(r: dict, issues: list[str]) -> dict[str, str]:
         elif i == "INSPECT_NEVER":
             f[i] = f"Inspection date = none; hazard = {r['hazard']} (NID, {snap})"
         elif i.startswith("AGE_"):
-            f[i] = f"Year completed = {r.get('year_completed')}; year modified = {r.get('year_modified') or 'none'} (NID, {snap}); age measured at {REFERENCE_YEAR}"
+            f[i] = f"Year completed = {r.get('year_completed')}; year modified = {r.get('year_modified') or 'none'} (NID, {snap}); age measured at {ref_year(r)}"
         elif i == "HAZARD_UNDET":
             f[i] = f"Hazard potential = {r['hazard']} (NID, {snap})"
         elif i == "HIGH_CONSEQUENCE":

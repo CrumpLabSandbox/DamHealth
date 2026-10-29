@@ -34,15 +34,16 @@ export function fmtAcreFeet(acft: number | null | undefined): string {
 export function volumeAnalogy(acft: number | null | undefined): string | null {
   if (acft == null) return null
   const gallons = acft * 325851
-  const pools = gallons / 660000 // olympic pool ≈ 660,000 gal
+  const pools = gallons / 660000 // olympic pool ≈ 660,000 gal (recheck-ok: unit conversion)
   if (pools < 2) return 'about one Olympic swimming pool'
   if (pools < 1000) return `about ${fmtInt(pools)} Olympic swimming pools`
-  const superdomes = (acft * 43560) / 125_000_000 // Superdome ≈ 125M ft³
+  const superdomes = (acft * 43560) / 125_000_000 // Superdome ≈ 125M ft³ (recheck-ok: unit conversion)
   if (superdomes < 1000) return `enough water to fill the Superdome ${fmtInt(superdomes)} times`
   return `${fmtNum(acft / 1e6, 1)} million acre-feet — a major reservoir`
 }
 
-export function ageOf(year: number | null | undefined, ref = 2026): number | null {
+/** Age at the NID snapshot year (catalog.snapshot_year), so ages advance when the data refreshes. */
+export function ageOf(year: number | null | undefined, ref: number): number | null {
   return year == null ? null : ref - year
 }
 

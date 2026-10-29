@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import GradeBadge from '../components/GradeBadge'
 import { loadDam } from '../lib/data'
-import { fmtRange } from '../lib/format'
-import { useTitle } from '../lib/hooks'
+import { fmtInt, fmtRange } from '../lib/format'
+import { useSummary, useTitle } from '../lib/hooks'
 import type { Dam } from '../lib/types'
 
 export default function Act() {
@@ -11,11 +11,14 @@ export default function Act() {
   const [params] = useSearchParams()
   const id = params.get('dam')
   const [dam, setDam] = useState<Dam | null>(null)
+  const n = useSummary().data?.national
   useEffect(() => { if (id) loadDam(id).then(setDam) }, [id])
   const share = typeof window !== 'undefined' ? window.location.origin + import.meta.env.BASE_URL + (dam ? `dam/${dam.nid_id}` : '') : ''
   const text = dam
     ? `${dam.name} (${dam.state}) is a ${dam.hazard}-hazard dam rated ${dam.condition ?? 'with no published condition'} — DamHealth grade ${dam.grade}. ${dam.plan_status.status === 'no_public_plan' ? 'No public plan to fix it.' : ''} ${share}`
-    : `More than 2,600 U.S. dams that could kill people are in poor or unsatisfactory condition. See yours: ${share}`
+    : n
+      ? `America has ${fmtInt(n.dams)} dams. ${fmtInt(n.high_poor_unsat)} are in poor or failing condition, and their failure could lead to loss of life. See yours: ${share}`
+      : `Thousands of U.S. dams whose failure could cost lives are in poor or failing condition. See yours: ${share}`
 
   return (
     <div className="wrap section">

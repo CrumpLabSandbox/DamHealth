@@ -1,10 +1,13 @@
+import BuildInfo from '../components/BuildInfo'
 import Markdown from '../components/Markdown'
-import { useTitle } from '../lib/hooks'
+import { useCatalog, useTitle } from '../lib/hooks'
 
 export default function Methodology() {
   useTitle('Methodology')
+  const cat = useCatalog().data
   return (
     <div className="wrap section">
+      {cat && <div style={{ marginBottom: 24 }}><BuildInfo catalog={cat} /></div>}
       <Markdown file="methodology.md" />
       <h2 style={{ marginTop: 32 }}>Data dictionary</h2>
       <Markdown file="schema.md" />

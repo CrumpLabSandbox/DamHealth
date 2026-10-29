@@ -33,6 +33,18 @@ jobs:
           python3 -I data/pipeline/score_and_plan.py
           python3 -I data/pipeline/publish.py
 
+      - name: Keep the exact NID input and recheck report
+        uses: actions/upload-artifact@v7
+        with:
+          name: nid-input-${{ github.sha }}
+          path: |
+            data/raw/nation.csv
+            data/build/merge_report.json
+            data/build/score_report.json
+            data/build/recheck_report.json
+          retention-days: 90
+          if-no-files-found: warn
+
       - name: Pipeline tests
         run: |
           pip install -q pytest

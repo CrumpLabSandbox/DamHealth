@@ -1,0 +1,55 @@
+{
+  "_about": "Figures the site quotes that do not come from the National Inventory of Dams, so the build cannot recompute them. Each has its source and the date a person last checked it. RECHECK.md says how to review them; the build warns when 'checked' is more than 180 days old.",
+  "facts": {
+    "asdso_nonfederal_usd": {
+      "value": 165200000000,
+      "label": "ASDSO estimate to rehabilitate non-federal dams",
+      "source": "ASDSO, Cost of Rehabilitating Our Nation's Dams, 2025 update",
+      "url": "https://damsafety.org/CostofRehab",
+      "as_of": "2025-03",
+      "checked": "2026-10-29"
+    },
+    "asdso_high_hazard_usd": {
+      "value": 37400000000,
+      "label": "ASDSO estimate for non-federal high-hazard dams",
+      "source": "ASDSO, Cost of Rehabilitating Our Nation's Dams, 2025 update",
+      "url": "https://damsafety.org/CostofRehab",
+      "as_of": "2025-03",
+      "checked": "2026-10-29"
+    },
+    "hhpd_iija_usd": {
+      "value": 585000000,
+      "label": "FEMA HHPD rehabilitation grants from the 2021 infrastructure law (one-time)",
+      "source": "Infrastructure Investment and Jobs Act; FEMA NDSP HHPD brochure",
+      "url": "https://www.fema.gov/sites/default/files/documents/fema_ndsp-hhpd-brochure.pdf",
+      "as_of": "2021-11",
+      "checked": "2026-10-29"
+    },
+    "hhpd_annual_usd": {
+      "value": 11400000,
+      "label": "FEMA HHPD rehabilitation grants, latest annual round",
+      "round": "FY2026",
+      "source": "FEMA press release, 24 September 2026",
+      "url": "https://www.fema.gov/press-release/20260924/fema-delivers-188-million-empower-states-and-territories-improve-dam",
+      "as_of": "2026-09-24",
+      "checked": "2026-10-29"
+    },
+    "hhpd_federal_share": {
+      "value": 0.65,
+      "label": "Maximum federal cost share for HHPD grants",
+      "source": "FEMA NDSP HHPD brochure",
+      "url": "https://www.fema.gov/sites/default/files/documents/fema_ndsp-hhpd-brochure.pdf",
+      "as_of": "2021-11",
+      "checked": "2026-10-29"
+    },
+    "asce_dams_grade": {
+      "value": "D+",
+      "label": "ASCE Report Card grade for U.S. dams",
+      "year": 2025,
+      "source": "ASCE 2025 Report Card for America's Infrastructure, Dams",
+      "url": "https://infrastructurereportcard.org/wp-content/uploads/2025/03/Dams.pdf",
+      "as_of": "2025-03",
+      "checked": "2026-10-29"
+    }
+  }
+}

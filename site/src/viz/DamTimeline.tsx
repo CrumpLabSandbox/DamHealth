@@ -1,11 +1,9 @@
 import type { Dam } from '../lib/types'
 
-const NOW = 2026
-
 interface Ev { year: number; label: string; kind: 'past' | 'now' | 'plan' }
 
 /** Horizontal timeline: built, modified, inspection, EAP, today, then the 1/5/10-year plan horizons. */
-export default function DamTimeline({ dam }: { dam: Dam }) {
+export default function DamTimeline({ dam, refYear: NOW }: { dam: Dam; refYear: number }) {
   const past: Ev[] = []
   if (dam.year_completed) past.push({ year: dam.year_completed, label: `Built ${dam.year_completed}`, kind: 'past' })
   if (dam.year_modified) past.push({ year: dam.year_modified, label: `Modified ${dam.year_modified}`, kind: 'past' })
@@ -13,7 +11,7 @@ export default function DamTimeline({ dam }: { dam: Dam }) {
   if (dam.inspection_date) past.push({ year: +dam.inspection_date.slice(0, 4), label: `Inspected ${dam.inspection_date.slice(0, 4)}`, kind: 'past' })
   past.sort((a, b) => a.year - b.year)
   const plan: Ev[] = [
-    { year: NOW, label: 'Today', kind: 'now' },
+    { year: NOW, label: `Now (${NOW})`, kind: 'now' },
     { year: NOW + 1, label: 'Yr 1 · stabilize', kind: 'plan' },
     { year: NOW + 5, label: 'Yr 5 · fixed', kind: 'plan' },
     { year: NOW + 10, label: 'Yr 10 · modern', kind: 'plan' },

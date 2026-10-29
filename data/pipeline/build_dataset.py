@@ -348,7 +348,7 @@ def current_record(row: dict, snapshot: str) -> dict | None:
             part = part.strip().title()
             if part and part not in foundation:
                 foundation.append(part)
-    other_names = [n for n in (title_case(x) for x in _split(row.get("Other Names")) + _split(row.get("Former Names"))) if n]
+    other_names = [n for n in (title_case(x) for x in _split(row.get("Other Names")) + _split(row.get("Former Names"))) if n and re.search(r"[A-Za-z]", n)]
     rec = {
         "nid_id": nid,
         "name": title_case(row.get("Dam Name")) or nid,
@@ -434,6 +434,13 @@ def ingest_current(path: Path = NID_CURRENT_CSV) -> tuple[list[dict], dict]:
                 chosen[rec["nid_id"]] = (rank, rec)
     report["snapshot"] = snapshot
     report["source"] = "nidcurrent"
+    # Fingerprint of the exact input, so a build can be matched to the file it read.
+    digest = __import__("hashlib").sha256()
+    with open(path, "rb") as fb:
+        for chunk in iter(lambda: fb.read(1 << 20), b""):
+            digest.update(chunk)
+    report["sha256"] = digest.hexdigest()
+    report["bytes"] = path.stat().st_size
     return [rec for _, rec in chosen.values()], dict(report)
 
 

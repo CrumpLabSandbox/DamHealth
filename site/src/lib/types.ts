@@ -55,6 +55,20 @@ export interface Catalog {
   sources: Record<string, SourceMeta>
   field_sources: { nid2026hh: string[]; census2023: string[]; computed: string[] }
   built: string
+  snapshot_year: number
+  provenance: Provenance
+  external: Record<string, ExternalFact>
+}
+
+/** Fingerprint of the build: which NID file it read and which code produced it. */
+export interface Provenance {
+  nid_source: string | null; nid_snapshot: string | null; nid_url: string | null; nid_sha256: string | null
+  nid_bytes: number | null; nid_rows: number | null; dams: number; git_sha: string | null; built: string
+}
+
+/** A figure from outside the inventory, kept in data/curated/external_facts.json and checked by hand. */
+export interface ExternalFact {
+  value: number | string; label: string; source: string; url: string; as_of: string; checked: string; round?: string; year?: number
 }
 
 export interface SourceMeta {

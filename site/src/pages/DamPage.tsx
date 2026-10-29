@@ -40,7 +40,7 @@ export default function DamPage() {
   }
 
   const eng = lens === 'engineering'
-  const age = ageOf(dam.year_completed)
+  const age = ageOf(dam.year_completed, cat.snapshot_year)
   const planLabel = cat.plan_status_labels[dam.plan_status.status]
   const stateRoll = summary?.states[dam.state]
   // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -135,9 +135,9 @@ export default function DamPage() {
         </div>
         <div className="card">
           <h2>Timeline</h2>
-          <DamTimeline dam={dam} />
+          <DamTimeline dam={dam} refYear={cat.snapshot_year} />
           <h3 style={{ marginTop: 16 }}>Compared with {dam.state_name} and the nation</h3>
-          <ComparisonBars dam={dam} state={stateRoll} national={summary?.national} />
+          <ComparisonBars dam={dam} state={stateRoll} national={summary?.national} refYear={cat.snapshot_year} />
         </div>
       </section>
 

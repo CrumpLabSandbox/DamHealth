@@ -9,9 +9,12 @@ site/public/data/
 """
 from __future__ import annotations
 
+import json
+import os
 import re
-import shutil
+import subprocess
 import sys
+from datetime import date
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -153,10 +156,92 @@ def sources_used(dams: list[dict]) -> tuple[dict, dict]:
     return sources, dates
 
 
+def git_sha() -> str | None:
+    sha = os.environ.get("GITHUB_SHA")
+    if sha:
+        return sha
+    try:
+        return subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+    except Exception:
+        return None
+
+
+EXTERNAL_MAX_AGE_DAYS = 180
+
+
+def score_matched(dams: list[dict]) -> int:
+    return sum(1 for r in dams if (r.get("plan_status") or {}).get("basis") == "curated research")
+
+
+def load_external() -> tuple[dict, list[dict]]:
+    """Hand-maintained figures from outside the inventory, plus any whose check is overdue."""
+    path = ROOT / "data" / "curated" / "external_facts.json"
+    facts = load_json(path)["facts"] if path.exists() else {}
+    overdue = []
+    for key, f in facts.items():
+        age = (date.today() - date.fromisoformat(f["checked"])).days
+        if age > EXTERNAL_MAX_AGE_DAYS:
+            overdue.append({"fact": key, "issue": f"last checked {f['checked']} ({age} days ago); confirm value and source", "source": f.get("url")})
+    return facts, overdue
+
+
+def fmt_int(v) -> str:
+    return f"{int(round(v)):,}"
+
+
+def fmt_usd(v: float) -> str:
+    return f"${v / 1e9:.1f}B" if v >= 1e9 else f"${v / 1e6:.1f}M" if v >= 1e6 else f"${v:,.0f}"
+
+
+def render_markdown(text: str, ctx: dict, dams_by_id: dict[str, dict], name: str) -> str:
+    """Fill {{...}} placeholders from this build's data so Markdown pages never carry stale counts.
+    {{national.<key>}}, {{national.issues.<CODE>}}, {{nid.<key>}}, {{curated.<key>}}, {{census.<key>}},
+    {{external.<fact>.value}}, {{grades_table}}, {{dam:<NIDID>.<field>}}; prefix a path with usd: for dollars.
+    An unknown placeholder fails the build."""
+    def value(token: str) -> str:
+        token = token.strip()
+        if token.startswith("usd:"):
+            return fmt_usd(float(value(token[4:]).replace(",", "")))
+        if token == "grades_table":
+            n = ctx["national"]
+            rows = ["| Grade | All dams | High-hazard dams |", "|---|---|---|"]
+            rows += [f"| {g} | {fmt_int(n['grades'].get(g, 0))} | {fmt_int(n['grades_high'].get(g, 0))} |" for g in "ABCDF"]
+            return "\n".join(rows)
+        if token.startswith("dam:"):
+            nid, _, field = token[4:].partition(".")
+            d = dams_by_id.get(nid)
+            if d is None or field not in d:
+                raise SystemExit(f"{name}: placeholder {{{{{token}}}}} refers to a dam or field not in this build")
+            v = d[field]
+            return "none" if v is None else fmt_int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else str(v)
+        cur = ctx
+        for part in token.split("."):
+            if not isinstance(cur, dict) or part not in cur:
+                raise SystemExit(f"{name}: unknown placeholder {{{{{token}}}}}")
+            cur = cur[part]
+        return fmt_int(cur) if isinstance(cur, (int, float)) and not isinstance(cur, bool) else str(cur)
+    return re.sub(r"\{\{([^{}]+)\}\}", lambda m: value(m.group(1)), text)
+
+
 def main() -> None:
     dams = load_json(BUILD / "dams_scored.json")
     SITE_DATA.mkdir(parents=True, exist_ok=True)
     sources, snapshot_dates = sources_used(dams)
+    merge = load_json(BUILD / "merge_report.json")
+    external, external_overdue = load_external()
+    snapshot = merge.get("snapshot")
+    provenance = {
+        "nid_source": merge.get("source"),
+        "nid_snapshot": snapshot,
+        "nid_url": SOURCES["nidcurrent"]["file"] if merge.get("source") == "nidcurrent" else None,
+        "nid_sha256": merge.get("sha256"),
+        "nid_bytes": merge.get("bytes"),
+        "nid_rows": merge.get("rows"),
+        "dams": len(dams),
+        "git_sha": git_sha(),
+        "built": date.today().isoformat(),
+    }
+    snapshot_year = int(snapshot[:4]) if snapshot else 2026
 
     # index
     dump_json(SITE_DATA / "index.json", {"columns": INDEX_COLUMNS, "rows": [index_row(r) for r in dams]})
@@ -174,7 +259,10 @@ def main() -> None:
         "snapshot_dates": snapshot_dates,
         "sources": sources,
         "field_sources": {"nid2026hh": sorted(FIELDS_2026), "census2023": sorted(FIELDS_CENSUS), "computed": sorted(FIELDS_COMPUTED)},
-        "built": __import__("datetime").date.today().isoformat(),
+        "built": provenance["built"],
+        "snapshot_year": snapshot_year,
+        "provenance": provenance,
+        "external": external,
     }, compact=False)
 
     # shards
@@ -207,13 +295,35 @@ def main() -> None:
         "shard_size": SHARD,
         "columns": ROW_COLUMNS,
     })
-    # Markdown content rendered by the site.
+    # Markdown content rendered by the site, with {{placeholders}} filled from this build.
     content = SITE_DATA.parent / "content"
     content.mkdir(parents=True, exist_ok=True)
+    ctx = {"national": national, "nid": {"snapshot": snapshot or "", "rows": merge.get("rows") or len(dams),
+                                         "snapshot_long": date.fromisoformat(snapshot).strftime("%-d %b %Y") if snapshot else "",
+                                         "sha256": merge.get("sha256") or ""}}
+    ctx["external"] = external
+    ctx["sources"] = SOURCES  # includes the pinned legacy mirrors' record counts
+    ctx["curated"] = {"plan_rows_matched": score_matched(dams)}
+    census_csv = ROOT / "data" / "curated" / "county_population.csv"
+    ctx["census"] = {"counties": sum(1 for _ in open(census_csv, encoding="utf-8")) - 1 if census_csv.exists() else 0}
+    by_id = {r["nid_id"]: r for r in dams}
     for src in (ROOT / "data" / "methodology.md", ROOT / "data" / "schema.md",
                 ROOT / "data" / "curated" / "case_studies.md", ROOT / "data" / "curated" / "funding_programs.md"):
         if src.exists():
-            shutil.copyfile(src, content / src.name)
+            (content / src.name).write_text(render_markdown(src.read_text(encoding="utf-8"), ctx, by_id, src.name), encoding="utf-8")
+
+    # Everything a person should look at by hand after this build.
+    score = load_json(BUILD / "score_report.json")
+    recheck = {"built": provenance["built"], "nid_snapshot": snapshot,
+               "curated_plan_rows": score.get("curated_recheck", []), "external_facts_overdue": external_overdue}
+    dump_json(BUILD / "recheck_report.json", recheck, compact=False)
+    unmatched = [r for r in recheck["curated_plan_rows"] if r["issue"] != "matched by name only; verify and pin nid_id"]
+    name_only = len(recheck["curated_plan_rows"]) - len(unmatched)
+    lines = [f"Research row: {r['row']} — {r['issue']}" for r in unmatched]
+    lines += [f"External fact: {r['fact']} — {r['issue']}" for r in external_overdue]
+    lines.append(f"{name_only} research rows are matched to dams by name only; see data/build/recheck_report.json")
+    for line in lines:
+        print(f"::warning::{line}" if os.environ.get("GITHUB_ACTIONS") else f"RECHECK: {line}")
 
     n_files = sum(1 for _ in (SITE_DATA / "dams").rglob("*.json"))
     size_mb = sum(p.stat().st_size for p in SITE_DATA.rglob("*.json")) / 1e6
