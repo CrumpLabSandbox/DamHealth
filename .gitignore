@@ -1,0 +1,9 @@
+data/raw/
+node_modules/
+site/dist/
+site/public/data/dams/
+.DS_Store
+__pycache__/
+.pytest_cache/
+*.pyc
+data/build/
