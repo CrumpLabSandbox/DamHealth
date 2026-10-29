@@ -48,15 +48,16 @@ async function lookup(dam: Dam): Promise<WikiHit | null> {
 }
 
 /** Runtime enrichment: photo + background from Wikipedia (CORS, no key). Falls back gracefully. */
-export default function DamPhoto({ dam }: { dam: Dam }) {
+export default function DamPhoto({ dam, onMatch }: { dam: Dam; onMatch?: (h: { title: string; url: string } | null) => void }) {
   const { lens } = useLens()
   const [hit, setHit] = useState<WikiHit | null | undefined>(undefined)
   useEffect(() => {
     let alive = true
     setHit(undefined)
     if (!cache.has(dam.nid_id)) cache.set(dam.nid_id, lookup(dam).catch(() => null))
-    cache.get(dam.nid_id)!.then((h) => alive && setHit(h))
+    cache.get(dam.nid_id)!.then((h) => { if (!alive) return; setHit(h); onMatch?.(h ? { title: h.title, url: h.url } : null) })
     return () => { alive = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dam])
 
   const history = buildHistory(dam)

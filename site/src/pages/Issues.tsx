@@ -35,7 +35,7 @@ export default function Issues() {
                 {(cat.data!.actions[code] ?? []).map((a) => <li key={a.title}><strong>{a.horizon === 1 ? 'Year 1' : a.horizon === 5 ? 'Years 2–5' : 'Years 5–10'}: {a.title}.</strong> {eng ? a.eng : a.plain}</li>)}
               </ul>
             </details>
-            <p className="small"><Link to={`/explore?${code === 'NO_EAP' ? 'hz=H' : code.startsWith('COND_UNSAT') ? 'grade=F' : code.startsWith('COND_POOR') ? 'grade=D' : ''}`}>See dams on the map →</Link></p>
+            <p style={{ marginTop: 12 }}><Link className="btn btn-sm" to={`/explore?${code === 'NO_EAP' ? 'hz=H' : code.startsWith('COND_UNSAT') ? 'grade=F' : code.startsWith('COND_POOR') ? 'grade=D' : ''}`}>See dams on the map →</Link></p>
           </div>
         ))}
       </div>

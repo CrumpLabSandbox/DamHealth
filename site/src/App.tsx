@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 
 const Home = lazy(() => import('./pages/Home'))
 const Explore = lazy(() => import('./pages/Explore'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
 const DamPage = lazy(() => import('./pages/DamPage'))
 const StatePage = lazy(() => import('./pages/StatePage'))
 const StatesIndex = lazy(() => import('./pages/StatesIndex'))
@@ -34,6 +35,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dam/:id" element={<DamPage />} />
           <Route path="/states" element={<StatesIndex />} />
           <Route path="/state/:st" element={<StatePage />} />

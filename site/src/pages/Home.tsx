@@ -33,6 +33,7 @@ export default function Home() {
           <div style={{ maxWidth: 640, margin: '20px 0' }}><SearchBox /></div>
           <div className="row">
             <Link className="btn btn-primary" to="/explore">Explore the map</Link>
+            <Link className="btn" to="/dashboard" style={{ color: '#fff', borderColor: 'rgba(255,255,255,.3)', background: 'transparent' }}>National dashboard</Link>
             <Link className="btn" to="/plan" style={{ color: '#fff', borderColor: 'rgba(255,255,255,.3)', background: 'transparent' }}>Read the national plan</Link>
           </div>
           <div className="grid grid-4" style={{ marginTop: 28 }}>

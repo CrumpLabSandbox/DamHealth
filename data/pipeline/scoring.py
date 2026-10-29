@@ -251,12 +251,48 @@ def cost_band(r: dict) -> dict | None:
     return {"low_usd": round(lo * f, -5), "high_usd": round(hi * f, -5), "basis": basis}
 
 
+def issue_facts(r: dict, issues: list[str]) -> dict[str, str]:
+    """The exact inventory field/value that triggered each issue, for the Sources panel."""
+    snap = r.get("attr_date")
+    cd = r.get("condition_date") or snap
+    f: dict[str, str] = {}
+    for i in issues:
+        if i.startswith("COND_") and i not in ("COND_UNKNOWN", "COND_FEDERAL_UNPUBLISHED"):
+            f[i] = f"Condition assessment = {r.get('condition')} (NID, {cd})"
+        elif i in ("COND_UNKNOWN", "COND_FEDERAL_UNPUBLISHED"):
+            f[i] = f"Condition assessment = {r.get('condition') or 'none'}; hazard = {r['hazard']} (NID, {snap})"
+        elif i in ("NO_EAP", "NO_EAP_SIG"):
+            f[i] = f"EAP = {r.get('eap')}; hazard = {r['hazard']} (NID, {snap})"
+        elif i == "INSPECT_OVERDUE":
+            f[i] = f"Last inspection = {r.get('inspection_date')}; required every {r.get('inspection_frequency_yrs') or 'unknown→5'} yr (NID, {snap})"
+        elif i == "INSPECT_NEVER":
+            f[i] = f"Inspection date = none; hazard = {r['hazard']} (NID, {snap})"
+        elif i.startswith("AGE_"):
+            f[i] = f"Year completed = {r.get('year_completed')}; year modified = {r.get('year_modified') or 'none'} (NID, {snap}); age measured at {REFERENCE_YEAR}"
+        elif i == "HAZARD_UNDET":
+            f[i] = f"Hazard potential = {r['hazard']} (NID, {snap})"
+        elif i == "HIGH_CONSEQUENCE":
+            f[i] = f"Hazard = High; storage = {r.get('storage_acft')} ac-ft; height = {r.get('height_ft')} ft (NID, {snap})"
+        elif i == "SPILLWAY_UNKNOWN":
+            f[i] = f"Spillway type = none recorded (NID, {snap})"
+        elif i == "PRIVATE_HIGH":
+            f[i] = f"Owner type = {', '.join(r.get('owner_types') or [])}; hazard = High; condition = {r.get('condition')} (NID, {snap})"
+        elif i == "UNREGULATED":
+            f[i] = f"State regulated = {r.get('state_regulated')}; federal roles = {'; '.join(r.get('federal_roles') or []) or 'none'} (NID 2019)"
+        elif i == "ENFORCEMENT":
+            f[i] = f"Regulatory status = {r.get('status')} (NID, {snap})"
+        elif i == "STALE_DATA":
+            f[i] = "Record absent from the 2026 high-hazard extract; newest data is the 2019 full inventory"
+    return f
+
+
 def score(r: dict) -> dict:
     issues = detect_issues(r)
     s = sub_scores(r, issues)
     dhi, grade, rules = dam_health_index(r, issues, s)
     return {
         "issues": issues,
+        "issue_facts": issue_facts(r, issues),
         "scores": {**s, "dhi": dhi},
         "grade": grade,
         "grade_rules": rules,

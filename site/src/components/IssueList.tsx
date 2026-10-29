@@ -21,6 +21,7 @@ export default function IssueList({ dam, catalog }: { dam: Dam; catalog: Catalog
               <span className="muted small">{meta.group}</span>
             </div>
             <p style={{ margin: '4px 0 0' }}>{lens === 'engineering' ? meta.eng : meta.plain}</p>
+            {dam.issue_facts?.[code] && <p className="small muted" style={{ margin: '2px 0 0' }}>Based on: {dam.issue_facts[code]}</p>}
           </div>
         </li>
       ))}

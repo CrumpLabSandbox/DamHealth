@@ -6,6 +6,10 @@ DamHealth is an open advocacy and engineering resource covering the ~92,000 dams
 
 Live site: https://crumplabsandbox.github.io/DamHealth/ (deployed from `main` by GitHub Actions).
 
+## Verifiability
+
+Every dam page ends with a **Sources & verification** panel that lists, field by field, where each value came from (the official NID record for that ID, the snapshot date and mirror commit, the Census vintage, or the cited URL for a curated plan-status row) and the exact inventory field that triggered each issue. Grades, scores, costs, breach estimates and plans are labelled *computed by DamHealth* and never presented as facts about the dam. The national `/dashboard` prints the same provenance manifest.
+
 ## Layout
 
 ```

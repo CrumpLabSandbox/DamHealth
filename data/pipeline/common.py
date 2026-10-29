@@ -20,6 +20,66 @@ HHPD2026_GEOJSON = RAW / "hhpd_2026.geojson"
 HHPD2026_DATE = "2026-03-15"
 NID2019_DATE = "2019-12-31"
 
+# Provenance manifest: every published value traces to one of these.
+SOURCES = {
+    "nid2019": {
+        "id": "nid2019", "name": "USACE National Inventory of Dams, full export",
+        "publisher": "U.S. Army Corps of Engineers", "snapshot": "2019",
+        "url": "https://nid.sec.usace.army.mil/",
+        "mirror": "https://github.com/bcongdon/nid-data", "mirror_commit": "57e55c0b061f3f68e788f6d4e6f831bc0e023a18",
+        "file": "NID2019_U.csv", "records": 91457,
+    },
+    "nid2026hh": {
+        "id": "nid2026hh", "name": "USACE National Inventory of Dams, high-hazard-potential extract",
+        "publisher": "U.S. Army Corps of Engineers", "snapshot": HHPD2026_DATE,
+        "url": "https://nid.sec.usace.army.mil/",
+        "mirror": "https://github.com/kalchikee/dam-failure-explorer", "mirror_commit": "b3a1251c6426a4b27520a545450fafbc2643d5ef",
+        "file": "web/data/dams_national_highhazard.geojson", "records": 16805,
+    },
+    "census2023": {
+        "id": "census2023", "name": "County Population Totals, Vintage 2023",
+        "publisher": "U.S. Census Bureau", "snapshot": "2023",
+        "url": "https://www.census.gov/data/tables/time-series/demo/popest/2020s-counties-total.html",
+        "mirror": "https://github.com/NHagar/data-journalism-python", "mirror_commit": None,
+        "file": "book/_static/census-estimates/*.csv", "records": 3143,
+    },
+    "curated": {
+        "id": "curated", "name": "DamHealth curated research (plan status, case studies)",
+        "publisher": "DamHealth, from cited public sources", "snapshot": "2026-10",
+        "url": "https://github.com/CrumpLabSandbox/DamHealth/tree/main/data/curated",
+        "mirror": None, "mirror_commit": None, "file": "data/curated/plan_status.csv", "records": None,
+    },
+    "computed": {
+        "id": "computed", "name": "Computed by DamHealth (screening indicator, not a fact about the dam)",
+        "publisher": "DamHealth", "snapshot": "build",
+        "url": "https://github.com/CrumpLabSandbox/DamHealth/blob/main/data/methodology.md",
+        "mirror": None, "mirror_commit": None, "file": "data/pipeline/scoring.py, plans.py", "records": None,
+    },
+}
+
+# Which source each canonical field comes from, given coverage.
+FIELDS_2026 = {"name", "county", "city", "river", "lat", "lon", "owner_name", "owner_types", "dam_types", "purposes",
+               "year_completed", "height_ft", "max_storage_acft", "hazard", "condition", "condition_date", "eap",
+               "inspection_date", "status"}
+FIELDS_COMPUTED = {"family", "storage_acft", "hazard_note", "merge_note", "issues", "scores", "grade", "grade_rules",
+                   "confidence", "cost", "plan", "projections", "coverage", "attr_date", "has_coords"}
+FIELDS_CENSUS = {"county_pop_2023", "county_full_name"}
+
+
+def field_source(field: str, coverage: str) -> str:
+    if field in FIELDS_COMPUTED:
+        return "computed"
+    if field in FIELDS_CENSUS:
+        return "census2023"
+    if field == "plan_status":
+        return "curated"
+    if coverage == "2026":
+        return "nid2026hh"
+    if coverage == "both" and field in FIELDS_2026:
+        return "nid2026hh"
+    return "nid2019"
+
+
 STATE_NAMES = {
     "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
     "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "DC": "District of Columbia",

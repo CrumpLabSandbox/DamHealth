@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+e2e.log
+preview.log
+test-results/
+playwright-report/

@@ -12,6 +12,8 @@ import ConsequenceStrip from '../viz/ConsequenceStrip'
 import DamTimeline from '../viz/DamTimeline'
 import ComparisonBars from '../viz/ComparisonBars'
 import FailureModes from '../components/FailureModes'
+import SourcesPanel from '../components/SourcesPanel'
+import { useState } from 'react'
 import { loadDam } from '../lib/data'
 import { GRADE_SENTENCE, GRADE_WORDS, ageOf, fmtInt, fmtRange, volumeAnalogy } from '../lib/format'
 import { useAsync, useCatalog, useSummary, useTitle } from '../lib/hooks'
@@ -21,6 +23,7 @@ export default function DamPage() {
   const { id = '' } = useParams()
   const { lens } = useLens()
   const { data: dam, error, loading } = useAsync(() => loadDam(id), [id])
+  const [wiki, setWiki] = useState<{ title: string; url: string } | null>(null)
   const cat = useCatalog().data
   const summary = useSummary().data
   useTitle(dam ? `${dam.name} (${dam.state})` : 'Dam')
@@ -40,6 +43,7 @@ export default function DamPage() {
   const age = ageOf(dam.year_completed)
   const planLabel = cat.plan_status_labels[dam.plan_status.status]
   const stateRoll = summary?.states[dam.state]
+  // eslint-disable-next-line react-hooks/rules-of-hooks
 
   return (
     <article className="wrap section">
@@ -71,7 +75,7 @@ export default function DamPage() {
           {dam.hazard_note && <p className="callout warn small" style={{ marginTop: 12 }}>{dam.hazard_note}</p>}
           {dam.merge_note && <p className="callout small" style={{ marginTop: 12 }}>{dam.merge_note}</p>}
         </div>
-        <DamPhoto dam={dam} />
+        <DamPhoto dam={dam} onMatch={setWiki} />
       </header>
 
       <section className="grid grid-2" style={{ marginTop: 24 }}>
@@ -100,7 +104,7 @@ export default function DamPage() {
       <section className="card" style={{ marginTop: 16 }}>
         <div className="section-title">
           <h2>{eng ? `Issues (${dam.issues.length})` : dam.issues.length ? 'Pressing issues' : 'No issues on record'}</h2>
-          <Link to="/issues" className="small">About these issues</Link>
+          <span className="small"><Link to="/issues">About these issues</Link> · <a href="#sources">what triggered each</a></span>
         </div>
         <IssueList dam={dam} catalog={cat} />
       </section>
@@ -143,6 +147,11 @@ export default function DamPage() {
           <FailureModes dam={dam} />
         </section>
       )}
+
+      <section className="card" style={{ marginTop: 16 }} id="sources">
+        <h2>Sources &amp; verification</h2>
+        <SourcesPanel dam={dam} catalog={cat} wiki={wiki} />
+      </section>
 
       <section className="grid grid-2" style={{ marginTop: 16 }}>
         <div className="card">

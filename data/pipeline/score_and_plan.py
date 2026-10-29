@@ -44,6 +44,9 @@ def load_curated_plan_status(dams: list[dict]) -> tuple[dict[str, dict], list[st
     with open(path, encoding="utf-8", newline="") as f:
         for row in csv.DictReader(f):
             nid = (row.get("nid_id") or "").strip().upper()
+            if not (row.get("source_url") or "").strip().startswith("http"):
+                unmatched.append(f'{row.get("dam_name")} ({row.get("state")}) — dropped: no source_url')
+                continue
             if not nid:
                 st = (row.get("state") or "").strip().upper()
                 key = norm_name(row.get("dam_name"))

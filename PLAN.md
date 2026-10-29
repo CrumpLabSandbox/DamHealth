@@ -45,6 +45,15 @@ A public, accessible advocacy website covering every dam in the U.S. National In
 
 Site-level, the two lenses also have home pages: `/community` (how to organize, letter templates, funding programs, success stories) and `/engineering` (methodology, failure-mode library, standards references, data downloads, open problems list — e.g. the 2,200+ Not-Rated high-hazard dams).
 
+### Added after Phase 4 review
+
+5. **National dashboard** (`/dashboard`): a "State of the Nation's Dams" page for residents, federal agencies and lawmakers. Headline KPIs (dams, high-hazard, Poor/Unsatisfactory, no EAP, not rated, 2019-only data, cost band vs. federal funding available); grade and condition mix; hazard × condition matrix; ownership breakdown (who holds the problem dams); age-by-decade histogram; plan-status funnel (identified → studied → funded → under construction → complete); state leaderboard sortable by every metric; federal-vs-non-federal split; "what would it take" scenarios (cost bands per horizon); and a one-paragraph verdict that updates from the data. Every chart has a table view and a download link.
+6. **Verifiability** is a hard requirement: nothing stated about an individual dam may be unsourced.
+   - Every dam page carries a **Sources** panel listing, field by field, where each value came from: the NID record (linked to the official USACE page for that NID ID), the snapshot date, the mirror repository and commit hash the snapshot was read from, the Census vintage for county population, the curated plan-status row with its source URL, and the Wikipedia article (if shown) with its revision link.
+   - Issues state the **exact field and value** that triggered them (e.g. "EAP = No — NID, 2026-03-15"). Scores, grades, cost bands, breach estimates and projections are labelled **computed by DamHealth** with a link to the method, never presented as facts about the dam.
+   - Curated rows (plan status, case studies) are only published with a `source_url`; rows without one are dropped at build time and reported.
+   - `catalog.json` records the provenance manifest (source, URL, commit, date, record count) and the dashboard and methodology pages print it.
+
 ## 1. Product scope
 
 ### Audiences
@@ -190,6 +199,7 @@ Hand-written, cited narratives for ~20 dams: what happened or is at risk, cost, 
 | **3. Site core** | Vite app, routing (`/`, `/explore`, `/dam/:id`, `/state/:st`, lens pages), data loading, search, Community/Engineering lens toggle, Pages 404 fallback. | Vitest, Playwright smoke, axe clean. |
 | **4. Explorer & visualizers** | Map-plus-profile explorer (next/prev/random/near-me), cross-section schematic with callouts, gauge, consequence strip, timeline, choropleth, comparison bars, failure-mode checklist. | Screenshot review in both themes; keyboard-only run. |
 | **5. Enrichment & content** | Runtime Wikipedia/Wikimedia photo + history with confidence matching and schematic fallback; case studies, plan-status research, issues explainer, national agenda, community organizing kit, engineering library, about/act. | Every claim cited; enrichment degrades gracefully offline. |
+| **5b. Dashboard & provenance** | `/dashboard` national page with KPIs, matrices, funnel, leaderboard and verdict; provenance manifest; per-dam Sources panel; issue trigger facts; curated rows require `source_url`. | Every number on the dashboard is reproducible from `summary.json`; every dam page lists a source per field. |
 | **6. Ship** | Prerender top dams + states, GitHub Actions → Pages workflow, README, data download page. | Live Pages URL loads; Lighthouse a11y ≥ 95. |
 
 Each phase ends with a commit; I'll report counts/screenshots as I go.

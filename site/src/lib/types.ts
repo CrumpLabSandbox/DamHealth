@@ -52,6 +52,14 @@ export interface Catalog {
   grade_bounds: [number, Grade][]
   state_names: Record<string, string>
   snapshot_dates: { nid_full: string; nid_high_hazard: string; census: string }
+  sources: Record<string, SourceMeta>
+  field_sources: { nid2026hh: string[]; census2023: string[]; computed: string[] }
+  built: string
+}
+
+export interface SourceMeta {
+  id: string; name: string; publisher: string; snapshot: string; url: string
+  mirror: string | null; mirror_commit: string | null; file: string; records: number | null
 }
 
 export interface Rollup {
@@ -65,6 +73,16 @@ export interface Rollup {
   high_no_eap: number
   issues: Record<string, number>
   plan_status: Partial<Record<PlanStatusCode, number>>
+  grades_high: Record<Grade, number>
+  decades: Record<string, number>
+  owners: Record<string, number>
+  owners_high_poor_unsat: Record<string, number>
+  federal: number
+  federal_high: number
+  hazard_condition: Record<string, number>
+  purposes: Record<string, number>
+  eap_high: Record<string, number>
+  dhi_hist: Record<string, number>
   mean_dhi: number | null
   median_year: number | null
   cost_low_usd: number
@@ -151,6 +169,8 @@ export interface Dam {
   attr_date: string
   merge_note?: string | null
   issues: string[]
+  issue_facts?: Record<string, string>
+  plan_source_url?: string | null
   scores: { condition: number; readiness: number; consequence: number; dhi: number }
   grade: Grade
   grade_rules: string[]

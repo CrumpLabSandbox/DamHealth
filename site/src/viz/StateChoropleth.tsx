@@ -82,8 +82,8 @@ export default function StateChoropleth({ states, metric: initial = 'high_poor_u
                   onMouseEnter={() => setHover(st ?? null)}
                   onMouseLeave={() => setHover(null)}
                   onClick={() => st && nav(`/state/${st}`)}
-                  tabIndex={st ? 0 : undefined}
-                  role={st ? 'link' : undefined}
+                  tabIndex={s ? 0 : undefined}
+                  role={s ? 'link' : undefined}
                   onKeyDown={(e) => { if (st && (e.key === 'Enter' || e.key === ' ')) nav(`/state/${st}`) }}
                   onFocus={() => setHover(st ?? null)}
                   onBlur={() => setHover(null)}

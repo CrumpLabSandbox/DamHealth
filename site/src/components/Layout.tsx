@@ -4,6 +4,7 @@ import { applyTheme, getTheme, useLens } from '../lib/lens'
 import SearchBox from './SearchBox'
 
 const NAV = [
+  ['/dashboard', 'Dashboard'],
   ['/explore', 'Explore'],
   ['/states', 'States'],
   ['/issues', 'Issues'],
@@ -67,7 +68,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <p>An independent advocacy project. Data: U.S. Army Corps of Engineers National Inventory of Dams (2019 full inventory; March 2026 high-hazard extract), U.S. Census Bureau, and cited public sources.</p>
           </div>
           <div>
-            <p><Link to="/methodology">Methodology &amp; limitations</Link><br /><Link to="/act">Take action</Link><br /><a href="https://nid.sec.usace.army.mil/" rel="noopener">Official National Inventory of Dams</a></p>
+            <ul className="footer-links"><li><Link to="/methodology">Methodology &amp; limitations</Link></li><li><Link to="/dashboard">National dashboard</Link></li><li><Link to="/act">Take action</Link></li><li><a href="https://nid.sec.usace.army.mil/" rel="noopener">Official National Inventory of Dams</a></li></ul>
           </div>
           <div>
             <p>The Dam Health Index is a screening indicator computed from public inventory data. It is not an engineering assessment and must not be used to make safety decisions about a specific dam.</p>

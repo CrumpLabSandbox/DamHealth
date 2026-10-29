@@ -16,7 +16,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import BUILD, ROOT, SITE_DATA, STATE_NAMES, dump_json, load_json  # noqa: E402
+from common import BUILD, FIELDS_2026, FIELDS_CENSUS, FIELDS_COMPUTED, ROOT, SITE_DATA, SOURCES, STATE_NAMES, dump_json, load_json  # noqa: E402
 from plans import ACTIONS, BASELINE, CLIMATE_OUTLOOK, CLIMATE_REGION  # noqa: E402
 from scoring import GRADE_BOUNDS, ISSUES  # noqa: E402
 
@@ -65,9 +65,20 @@ def compact_row(r: dict) -> list:
 ROW_COLUMNS = INDEX_COLUMNS + ["year", "height_ft", "storage_acft", "county", "river", "n_issues", "plan_status", "eap"]
 
 
+def sources_for(r: dict) -> dict:
+    """Field → source id, plus the official record link, for the per-dam Sources panel."""
+    fields = {k: field_source(k, r["coverage"]) for k in r if k not in ("plan", "sources")}
+    return {
+        "fields": fields,
+        "official_url": f"https://nid.sec.usace.army.mil/#/dams/system/{r['nid_id']}/summary",
+        "plan_source_url": (r.get("plan_status") or {}).get("source_url"),
+    }
+
+
 def slim_record(r: dict) -> dict:
     """Full record minus text that the client reconstructs from catalog.json."""
     out = dict(r)
+    out["plan_source_url"] = (r.get("plan_status") or {}).get("source_url")
     out.pop("plan", None)  # rebuilt client-side from issues + catalog
     out.pop("has_coords", None)
     proj = dict(out.get("projections") or {})
@@ -84,7 +95,23 @@ def rollup(rows: list[dict]) -> dict:
     ps = Counter(r["plan_status"]["status"] for r in rows)
     high = [r for r in rows if r["hazard"] == "High"]
     years = [r["year_completed"] for r in rows if r.get("year_completed")]
+    decades = Counter((y // 10) * 10 for y in years)
+    owners = Counter((r.get("owner_types") or ["Not Listed"])[0] for r in rows)
+    owners_high_bad = Counter((r.get("owner_types") or ["Not Listed"])[0] for r in high if r.get("condition") in ("Poor", "Unsatisfactory"))
+    federal = [r for r in rows if "Federal" in (r.get("owner_types") or [])]
+    matrix = Counter((r["hazard"], r.get("condition") or "None") for r in rows)
+    purposes = Counter(p for r in rows for p in (r.get("purposes") or []))
     return {
+        "grades_high": {k: Counter(r["grade"] for r in high).get(k, 0) for k in "ABCDF"},
+        "decades": {str(k): v for k, v in sorted(decades.items())},
+        "owners": dict(owners.most_common()),
+        "owners_high_poor_unsat": dict(owners_high_bad.most_common()),
+        "federal": len(federal),
+        "federal_high": sum(1 for r in federal if r["hazard"] == "High"),
+        "hazard_condition": {f"{h}|{c}": n for (h, c), n in matrix.items()},
+        "purposes": dict(purposes.most_common(8)),
+        "eap_high": dict(Counter(r.get("eap") or "Unknown" for r in high)),
+        "dhi_hist": dict(Counter(min(9, int(r["scores"]["dhi"] // 10)) * 10 for r in rows)),
         "dams": len(rows),
         "grades": {k: g.get(k, 0) for k in "ABCDF"},
         "hazard": dict(hz),
@@ -126,6 +153,9 @@ def main() -> None:
         "grade_bounds": GRADE_BOUNDS,
         "state_names": STATE_NAMES,
         "snapshot_dates": {"nid_full": "2019", "nid_high_hazard": "2026-03-15", "census": "2023"},
+        "sources": SOURCES,
+        "field_sources": {"nid2026hh": sorted(FIELDS_2026), "census2023": sorted(FIELDS_CENSUS), "computed": sorted(FIELDS_COMPUTED)},
+        "built": __import__("datetime").date.today().isoformat(),
     }, compact=False)
 
     # shards
