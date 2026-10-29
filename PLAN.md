@@ -207,7 +207,7 @@ Each phase ends with a commit; I'll report counts/screenshots as I go.
 ---
 
 ## 9. Known limitations (will be stated on the site)
-- Non-high-hazard dam attributes are 2019 vintage until the NID host is allowed or a CSV is supplied.
+- Attributes come from the current official NID export at build time; some states have not updated individual records in years, which the site flags.
 - NID condition ratings are self-reported by states/agencies and ~2,200 high-hazard dams are "Not Rated".
 - Cost estimates are planning-level bands (ASDSO methodology), not project estimates.
 - The Dam Health Index is a transparent screening tool, not a substitute for a dam-safety engineer's judgment.

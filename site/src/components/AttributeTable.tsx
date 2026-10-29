@@ -25,11 +25,11 @@ export default function AttributeTable({ dam }: { dam: Dam }) {
     ['Condition', dam.condition ? `${dam.condition}${dam.condition_date ? ` (as of ${fmtDate(dam.condition_date)})` : ''}` : 'Not available'],
     ['Emergency Action Plan', dam.eap ? `${dam.eap}${dam.eap_last_revision ? `, revised ${fmtDate(dam.eap_last_revision)}` : ''}` : '—'],
     ['Last inspection', dam.inspection_date ? `${fmtDate(dam.inspection_date)}${dam.inspection_frequency_yrs ? ` (every ${dam.inspection_frequency_yrs} yr)` : ''}` : 'None on record'],
-    ['Regulatory status (2026)', dam.status ?? null],
+    ['Operational status', dam.status ?? null],
     ['Nearest city', dam.city ? `${dam.city}${dam.city_distance_mi ? `, ${fmtNum(dam.city_distance_mi)} mi` : ''}` : null],
     ['County population (2023)', dam.county_pop_2023 ? fmtInt(dam.county_pop_2023) : null],
     ['Coordinates', eng && dam.lat != null ? `${dam.lat.toFixed(4)}, ${dam.lon?.toFixed(4)}` : null],
-    ['Record provenance', eng ? `${dam.coverage === 'both' ? '2019 inventory + 2026 high-hazard extract' : dam.coverage === '2026' ? '2026 high-hazard extract only' : '2019 inventory only'} (as of ${dam.attr_date})` : null],
+    ['Record provenance', eng ? dam.coverage === 'current' ? `National Inventory of Dams, data as of ${dam.attr_date}${dam.record_updated ? `; record last updated ${fmtDate(dam.record_updated)}` : ''}` : `${dam.coverage === 'both' ? '2019 inventory + 2026 high-hazard extract' : dam.coverage === '2026' ? '2026 high-hazard extract only' : '2019 inventory only'} (as of ${dam.attr_date})` : null],
   ]
   return (
     <dl className="attr">

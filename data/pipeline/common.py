@@ -15,6 +15,12 @@ BUILD = ROOT / "data" / "build"
 CURATED = ROOT / "data" / "curated"
 SITE_DATA = ROOT / "site" / "public" / "data"
 
+# Current full NID export from the official site (preferred). Its first line is
+# "Data Last Updated:,YYYY-MM-DD", which becomes the snapshot date of every record.
+NID_CURRENT_CSV = RAW / "nation.csv"
+NID_CURRENT_URL = "https://nid.sec.usace.army.mil/api/nation/csv"
+
+# Legacy fallback, used only when nation.csv is unavailable.
 NID2019_CSV = RAW / "NID2019_U.csv"
 HHPD2026_GEOJSON = RAW / "hhpd_2026.geojson"
 HHPD2026_DATE = "2026-03-15"
@@ -22,6 +28,13 @@ NID2019_DATE = "2019-12-31"
 
 # Provenance manifest: every published value traces to one of these.
 SOURCES = {
+    "nidcurrent": {
+        "id": "nidcurrent", "name": "USACE National Inventory of Dams, full national export",
+        "publisher": "U.S. Army Corps of Engineers", "snapshot": None,  # filled from the file at build time
+        "url": "https://nid.sec.usace.army.mil/",
+        "mirror": None, "mirror_commit": None,
+        "file": NID_CURRENT_URL, "records": None,
+    },
     "nid2019": {
         "id": "nid2019", "name": "USACE National Inventory of Dams, full export",
         "publisher": "U.S. Army Corps of Engineers", "snapshot": "2019",
@@ -73,6 +86,8 @@ def field_source(field: str, coverage: str) -> str:
         return "census2023"
     if field == "plan_status":
         return "curated"
+    if coverage == "current":
+        return "nidcurrent"
     if coverage == "2026":
         return "nid2026hh"
     if coverage == "both" and field in FIELDS_2026:

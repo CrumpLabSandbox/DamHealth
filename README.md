@@ -26,8 +26,8 @@ site/                   Vite + React + TypeScript static site (MapLibre, d3-geo,
 ## Build locally
 
 ```bash
-bash data/pipeline/fetch_raw.sh            # clones the two GitHub mirrors of NID data
-python3 -I data/pipeline/build_dataset.py  # 91,996 canonical records → data/build/dams.json
+bash data/pipeline/fetch_raw.sh            # downloads the current NID export (NID_REFRESH=1 to re-download)
+python3 -I data/pipeline/build_dataset.py  # ~91,900 canonical records → data/build/dams.json
 python3 -I data/pipeline/score_and_plan.py # issues, DHI, grades, plans, projections
 python3 -I data/pipeline/publish.py        # → site/public/data/ (index, summary, states, shards)
 python3 -m pytest -q data/tests
@@ -39,7 +39,7 @@ npm run e2e                                # Playwright smoke + axe (needs a Chr
 
 ## Data sources
 
-- USACE National Inventory of Dams — full 2019 export (mirror: `bcongdon/nid-data`) and the March 2026 high-hazard-potential extract (mirror: `kalchikee/dam-failure-explorer`). The official NID at nid.sec.usace.army.mil is the authority; set `data/raw/NID2019_U.csv` to a newer full export to refresh.
+- USACE National Inventory of Dams — the current full national export, downloaded from nid.sec.usace.army.mil on every build. Every record is dated from the export's "Data Last Updated" line. If that download fails, the build falls back to the 2019 export and March 2026 high-hazard extract from GitHub mirrors and CI shows a warning.
 - U.S. Census Bureau county population estimates, Vintage 2023.
 - ASDSO, ASCE, FEMA and USACE publications and press, cited in `data/curated/`.
 

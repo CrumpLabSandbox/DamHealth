@@ -96,7 +96,7 @@ ACTIONS = {
          "Comply with regulatory order; document corrective actions; schedule compliance inspection."),
     ],
     "STALE_DATA": [
-        (1, "Refresh the record", "Our newest information on this dam is from 2019; the state should publish current data.",
+        (1, "Refresh the record", "The public record for this dam is more than five years old; the state should publish current data.",
          "Submit current inventory data to NID; confirm hazard class, condition, EAP and inspection date."),
     ],
 }
@@ -126,23 +126,24 @@ def build_plan(r: dict, issues: list[str]) -> dict:
 # --------------------------------------------------------------------------- plan status
 
 def plan_status(r: dict, curated: dict | None) -> dict:
-    """Combine the 2026 NID status field with any curated research row."""
+    """Combine the NID operational status field with any curated research row."""
     if curated:
         return {"status": curated["status"], "program": curated.get("program") or None,
                 "amount_usd": curated.get("amount_usd") or None, "year": curated.get("year") or None,
                 "source_url": curated.get("source_url") or None, "note": curated.get("note") or None,
                 "basis": "curated research"}
     st = r.get("status") or ""
+    label = f"NID status ({r.get('attr_date')})"
     if st.startswith("Under Remediation"):
-        return {"status": "under_construction", "basis": "NID 2026 status: Under Remediation"}
+        return {"status": "under_construction", "basis": f"{label}: Under Remediation"}
     if st.startswith("Under Investigation"):
-        return {"status": "study_or_design", "basis": "NID 2026 status: Under Investigation, Planning, Permitting, or Design for Remediation"}
+        return {"status": "study_or_design", "basis": f"{label}: Under Investigation, Planning, Permitting, or Design for Remediation"}
     if st.startswith("Enforcement"):
-        return {"status": "unfunded_identified", "basis": "NID 2026 status: Enforcement Pending/Ongoing"}
+        return {"status": "unfunded_identified", "basis": f"{label}: Enforcement Pending/Ongoing"}
     if r.get("condition") in ("Poor", "Unsatisfactory"):
         return {"status": "no_public_plan", "basis": "Deficiency recorded but no remediation status or public plan found"}
-    if r["coverage"] in ("both", "2026"):
-        return {"status": "none_needed_or_unknown", "basis": "NID 2026 status: " + (st or "not reported")}
+    if r["coverage"] in ("current", "both", "2026"):
+        return {"status": "none_needed_or_unknown", "basis": f"{label}: " + (st or "not reported")}
     return {"status": "unknown", "basis": "No 2026 data"}
 
 

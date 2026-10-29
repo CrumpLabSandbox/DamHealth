@@ -88,3 +88,18 @@ def test_projections_have_region_and_outlook():
     p = projections(dam(), ["NO_EAP"], "C")
     assert p["climate_region"] == "Southern Great Plains" and p["climate_outlook"]
     assert any("no plan" in o for o in p["ten_year_outlook"])
+
+
+def test_current_record_staleness_uses_record_update_date():
+    fresh = dam(coverage="current", attr_date="2026-10-27", record_updated="2026-10-06")
+    old = dam(coverage="current", attr_date="2026-10-27", record_updated="2018-06-22")
+    assert "STALE_DATA" not in detect_issues(fresh)
+    assert "STALE_DATA" in detect_issues(old)
+    assert "STALE_DATA" in detect_issues(dam(coverage="2019", attr_date="2019-12-31"))
+
+
+def test_current_confidence_and_plan_status():
+    assert score(dam(coverage="current", attr_date="2026-10-27"))["confidence"] == "high"
+    assert score(dam(coverage="current", attr_date="2026-10-27", condition="Not Rated"))["confidence"] == "medium"
+    ps = plan_status(dam(coverage="current", attr_date="2026-10-27"), None)
+    assert ps["status"] == "none_needed_or_unknown" and ps["basis"].startswith("NID status (2026-10-27)")

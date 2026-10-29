@@ -63,7 +63,7 @@ export default function DamPage() {
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.25rem' }}>{GRADE_WORDS[dam.grade]} — Dam Health Index {dam.scores.dhi}</div>
               <div className="muted">{GRADE_SENTENCE[dam.grade]}</div>
-              <div className="small muted">Data confidence: <strong>{dam.confidence}</strong>{dam.coverage === '2019' ? ' · newest record 2019' : ' · includes March 2026 data'}</div>
+              <div className="small muted">Data confidence: <strong>{dam.confidence}</strong>{dam.coverage === 'current' ? ` · NID data as of ${dam.attr_date}` : dam.coverage === '2019' ? ' · newest record 2019' : ' · includes March 2026 data'}</div>
             </div>
           </div>
           <div className="row" style={{ marginTop: 14 }}>
@@ -167,7 +167,7 @@ export default function DamPage() {
             <dt>Owner</dt><dd>{dam.owner_name ?? '—'} {dam.owner_types.length > 0 && <span className="muted">({dam.owner_types.join(', ')})</span>}</dd>
             <dt>State regulator</dt><dd>{dam.state_reg_agency ?? (dam.state_regulated ? 'State dam safety program' : 'Not recorded')}</dd>
             {dam.federal_roles.length > 0 && <><dt>Federal roles</dt><dd>{dam.federal_roles.join('; ')}</dd></>}
-            {dam.cong_district && <><dt>Congressional district (2019)</dt><dd>{dam.cong_district}{dam.cong_rep_2019 && <> · {dam.cong_rep_2019} at the time</>}</dd></>}
+            {dam.cong_district && <><dt>Congressional district{dam.cong_rep_2019 ? ' (2019)' : ''}</dt><dd>{dam.cong_district}{dam.cong_rep_2019 && <> · {dam.cong_rep_2019} at the time</>}</dd></>}
             <dt>Official record</dt><dd><a href={`https://nid.sec.usace.army.mil/#/dams/system/${dam.nid_id}/summary`} rel="noopener">National Inventory of Dams: {dam.nid_id}</a></dd>
             {dam.plan_status.source_url && <><dt>Plan source</dt><dd><a href={dam.plan_status.source_url} rel="noopener">{dam.plan_status.program ?? 'Source'}</a>{dam.plan_status.note && <div className="small muted">{dam.plan_status.note}</div>}</dd></>}
           </dl>

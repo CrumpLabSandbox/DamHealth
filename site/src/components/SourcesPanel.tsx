@@ -13,6 +13,7 @@ function sourceOf(field: string, dam: Dam, cat: Catalog): string {
   const fs = cat.field_sources
   if (fs.computed.includes(field)) return 'computed'
   if (fs.census2023.includes(field)) return 'census2023'
+  if (dam.coverage === 'current') return 'nidcurrent'
   if (dam.coverage === '2026') return 'nid2026hh'
   if (dam.coverage === 'both' && fs.nid2026hh.includes(field)) return 'nid2026hh'
   return 'nid2019'
@@ -33,7 +34,7 @@ export default function SourcesPanel({ dam, catalog, wiki }: { dam: Dam; catalog
     const s = src[id]
     if (!s) return id
     const href = id.startsWith('nid') ? official : s.url
-    return <a href={href} rel="noopener">{id === 'nid2019' ? 'NID 2019' : id === 'nid2026hh' ? `NID ${s.snapshot}` : id === 'census2023' ? 'Census 2023' : id === 'computed' ? 'Computed by DamHealth' : s.name}</a>
+    return <a href={href} rel="noopener">{id === 'nid2019' ? 'NID 2019' : id === 'nid2026hh' || id === 'nidcurrent' ? `NID ${s.snapshot}` : id === 'census2023' ? 'Census 2023' : id === 'computed' ? 'Computed by DamHealth' : s.name}</a>
   }
   return (
     <div>
@@ -52,7 +53,7 @@ export default function SourcesPanel({ dam, catalog, wiki }: { dam: Dam; catalog
             <tr><td>Issues</td><td>{dam.issues.length} flags, each with its triggering field below</td><td>{link('computed')}</td></tr>
             <tr><td>Grade / Dam Health Index</td><td>{dam.grade} / {dam.scores.dhi}</td><td>{link('computed')} (<a href={`${import.meta.env.BASE_URL}methodology`}>method</a>)</td></tr>
             <tr><td>Cost band, breach estimate, plan, projections</td><td>screening estimates</td><td>{link('computed')}</td></tr>
-            <tr><td>Plan status</td><td>{catalog.plan_status_labels[dam.plan_status.status]}{dam.plan_status.basis && <span className="muted"> — {dam.plan_status.basis}</span>}</td><td>{dam.plan_status.source_url ? <a href={dam.plan_status.source_url} rel="noopener">{dam.plan_status.program ?? 'cited source'}</a> : dam.plan_status.basis?.startsWith('NID') ? link(dam.coverage === '2019' ? 'nid2019' : 'nid2026hh') : link('computed')}</td></tr>
+            <tr><td>Plan status</td><td>{catalog.plan_status_labels[dam.plan_status.status]}{dam.plan_status.basis && <span className="muted"> — {dam.plan_status.basis}</span>}</td><td>{dam.plan_status.source_url ? <a href={dam.plan_status.source_url} rel="noopener">{dam.plan_status.program ?? 'cited source'}</a> : dam.plan_status.basis?.startsWith('NID') ? link(dam.coverage === 'current' ? 'nidcurrent' : dam.coverage === '2019' ? 'nid2019' : 'nid2026hh') : link('computed')}</td></tr>
             {wiki && <tr><td>Photo and background text</td><td>{wiki.title}</td><td><a href={wiki.url} rel="noopener">Wikipedia</a> (matched at runtime by name and state; may be wrong — check the title)</td></tr>}
           </tbody>
         </table>
@@ -67,7 +68,7 @@ export default function SourcesPanel({ dam, catalog, wiki }: { dam: Dam; catalog
       )}
       <p className="small muted" style={{ marginTop: 8 }}>
         Snapshots: {Object.values(src).filter((s) => s.id !== 'computed' && s.id !== 'curated').map((s) => <span key={s.id}>{s.name} ({s.snapshot}{s.mirror_commit ? <>, <a href={`${s.mirror}/tree/${s.mirror_commit}`} rel="noopener">commit {s.mirror_commit.slice(0, 7)}</a></> : ''}); </span>)}
-        record last touched {dam.attr_date}.
+        {dam.record_updated ? <>state last updated this record {dam.record_updated}.</> : <>record last touched {dam.attr_date}.</>}
       </p>
     </div>
   )

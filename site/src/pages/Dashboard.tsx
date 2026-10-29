@@ -98,7 +98,7 @@ export default function Dashboard() {
         <StatTile value={fmtInt(n.high_no_eap)} label="high-hazard dams with no Emergency Action Plan" />
         <StatTile value={fmtInt(n.high_not_rated)} label="high-hazard dams with no published condition rating" />
         <StatTile value={fmtInt((n.hazard['Undetermined'] ?? 0) + (n.hazard['Not Available'] ?? 0))} label="dams whose downstream hazard is undetermined" />
-        <StatTile value={fmtInt(n.issues['STALE_DATA'] ?? 0)} label="dams with no public data newer than 2019" />
+        <StatTile value={fmtInt(n.issues['STALE_DATA'] ?? 0)} label="dams whose public record is over five years old" />
         <StatTile value={n.median_year ? `${2026 - n.median_year} yrs` : '—'} label="median dam age" />
       </div>
 

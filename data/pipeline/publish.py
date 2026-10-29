@@ -16,7 +16,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import BUILD, FIELDS_2026, FIELDS_CENSUS, FIELDS_COMPUTED, ROOT, SITE_DATA, SOURCES, STATE_NAMES, dump_json, load_json  # noqa: E402
+from common import BUILD, FIELDS_2026, FIELDS_CENSUS, FIELDS_COMPUTED, ROOT, SITE_DATA, SOURCES, STATE_NAMES, dump_json, field_source, load_json  # noqa: E402
 from plans import ACTIONS, BASELINE, CLIMATE_OUTLOOK, CLIMATE_REGION  # noqa: E402
 from scoring import GRADE_BOUNDS, ISSUES  # noqa: E402
 
@@ -32,7 +32,7 @@ PLAN_STATUS_LABELS = {
     "unfunded_identified": "Problem identified, no funding",
     "no_public_plan": "No public plan found",
     "none_needed_or_unknown": "No remediation reported",
-    "unknown": "Unknown (2019 data only)",
+    "unknown": "Unknown (no current status data)",
 }
 
 
@@ -135,9 +135,27 @@ def worst(rows: list[dict], n: int) -> list[list]:
     return [compact_row(r) for r in ranked[:n]]
 
 
+def sources_used(dams: list[dict]) -> tuple[dict, dict]:
+    """Provenance manifest limited to the sources this build actually read, with the
+    current NID snapshot date and record count filled in from the build."""
+    report = load_json(BUILD / "merge_report.json")
+    sources = {k: dict(v) for k, v in SOURCES.items()}
+    if report.get("source") == "nidcurrent":
+        sources["nidcurrent"]["snapshot"] = report["snapshot"]
+        sources["nidcurrent"]["records"] = len(dams)
+        sources.pop("nid2019", None)
+        sources.pop("nid2026hh", None)
+        dates = {"nid": report["snapshot"], "census": "2023"}
+    else:
+        sources.pop("nidcurrent", None)
+        dates = {"nid": "2019 + 2026-03-15 (high hazard)", "census": "2023"}
+    return sources, dates
+
+
 def main() -> None:
     dams = load_json(BUILD / "dams_scored.json")
     SITE_DATA.mkdir(parents=True, exist_ok=True)
+    sources, snapshot_dates = sources_used(dams)
 
     # index
     dump_json(SITE_DATA / "index.json", {"columns": INDEX_COLUMNS, "rows": [index_row(r) for r in dams]})
@@ -152,8 +170,8 @@ def main() -> None:
         "plan_status_labels": PLAN_STATUS_LABELS,
         "grade_bounds": GRADE_BOUNDS,
         "state_names": STATE_NAMES,
-        "snapshot_dates": {"nid_full": "2019", "nid_high_hazard": "2026-03-15", "census": "2023"},
-        "sources": SOURCES,
+        "snapshot_dates": snapshot_dates,
+        "sources": sources,
         "field_sources": {"nid2026hh": sorted(FIELDS_2026), "census2023": sorted(FIELDS_CENSUS), "computed": sorted(FIELDS_COMPUTED)},
         "built": __import__("datetime").date.today().isoformat(),
     }, compact=False)

@@ -65,7 +65,7 @@ export default function NationalPlan() {
           <li><strong>Require an EAP for every high- and significant-hazard dam</strong>, with annual tabletop exercises, as a condition of operation.</li>
           <li><strong>Publish condition ratings and inundation maps</strong> for every high-hazard dam, including federal dams whose DSAC/SOD classifications are kept out of the National Inventory.</li>
           <li><strong>Create a private-owner pathway</strong>: low-interest state loans, public acquisition where appropriate, and funded removal for dams without a purpose.</li>
-          <li><strong>Update the inventory every year</strong>: {fmtInt(n.issues['STALE_DATA'] ?? 0)} dams on this site have no data newer than 2019.</li>
+          <li><strong>Update the inventory every year</strong>: {fmtInt(n.issues['STALE_DATA'] ?? 0)} dams on this site have a public record that has not been updated in more than five years.</li>
         </ol>
         <p className="small"><Link to="/act">Take action →</Link> · <Link to="/methodology">Methodology →</Link></p>
       </div>

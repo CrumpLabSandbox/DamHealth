@@ -8,6 +8,20 @@ from __future__ import annotations
 from datetime import date
 
 REFERENCE_YEAR = 2026
+STALE_YEARS = 5
+
+
+def is_stale(r: dict) -> bool:
+    """Newest public data for this dam is more than STALE_YEARS old at the snapshot."""
+    if r.get("coverage") == "2019":
+        return True
+    upd, snap = r.get("record_updated"), r.get("attr_date")
+    if not upd or not snap:
+        return False
+    try:
+        return (date.fromisoformat(snap) - date.fromisoformat(upd)).days > STALE_YEARS * 365.25
+    except ValueError:
+        return False
 
 # --------------------------------------------------------------------------- issue catalogue
 # severity: 1 note … 5 critical. group: condition | readiness | consequence.
@@ -66,9 +80,9 @@ ISSUES = {
     "ENFORCEMENT": {"sev": 3, "group": "readiness", "title": "Under enforcement action",
                     "plain": "Regulators have an enforcement action pending or ongoing against the owner.",
                     "eng": "NID status = Enforcement Pending/Ongoing."},
-    "STALE_DATA": {"sev": 1, "group": "readiness", "title": "Only 2019 data available",
-                   "plain": "Our most recent record for this dam is from 2019.",
-                   "eng": "Record not present in the 2026 extract; attributes are from the 2019 full inventory."},
+    "STALE_DATA": {"sev": 1, "group": "readiness", "title": "Record not kept up to date",
+                   "plain": "The public record for this dam has not been updated in more than five years.",
+                   "eng": "NID 'Data Last Updated' for this record is more than five years before the inventory snapshot (or, in the legacy build, the newest data is the 2019 full inventory)."},
 }
 
 GRADE_BOUNDS = [(20, "A"), (30, "B"), (45, "C"), (60, "D"), (101, "F")]
@@ -152,7 +166,7 @@ def detect_issues(r: dict) -> list[str]:
     if (r.get("status") or "").startswith("Enforcement"):
         issues.append("ENFORCEMENT")
 
-    if r["coverage"] == "2019":
+    if is_stale(r):
         issues.append("STALE_DATA")
     return issues
 
@@ -214,8 +228,12 @@ def dam_health_index(r: dict, issues: list[str], s: dict) -> tuple[float, str, l
 
 
 def data_confidence(r: dict) -> str:
+    if r.get("condition") not in (None, "Not Rated") and r["coverage"] in ("current", "both", "2026"):
+        return "high"
     if r["coverage"] in ("both", "2026"):
-        return "high" if r.get("condition") not in (None, "Not Rated") else "medium"
+        return "medium"
+    if r["coverage"] == "current" and (r.get("inspection_date") or r.get("year_completed")):
+        return "medium"
     if r.get("inspection_date") and r.get("year_completed"):
         return "medium"
     return "low"
@@ -278,11 +296,14 @@ def issue_facts(r: dict, issues: list[str]) -> dict[str, str]:
         elif i == "PRIVATE_HIGH":
             f[i] = f"Owner type = {', '.join(r.get('owner_types') or [])}; hazard = High; condition = {r.get('condition')} (NID, {snap})"
         elif i == "UNREGULATED":
-            f[i] = f"State regulated = {r.get('state_regulated')}; federal roles = {'; '.join(r.get('federal_roles') or []) or 'none'} (NID 2019)"
+            f[i] = f"State regulated = {r.get('state_regulated')}; federal roles = {'; '.join(r.get('federal_roles') or []) or 'none'} (NID, {snap})"
         elif i == "ENFORCEMENT":
             f[i] = f"Regulatory status = {r.get('status')} (NID, {snap})"
         elif i == "STALE_DATA":
-            f[i] = "Record absent from the 2026 high-hazard extract; newest data is the 2019 full inventory"
+            if r["coverage"] == "2019":
+                f[i] = "Record absent from the 2026 high-hazard extract; newest data is the 2019 full inventory"
+            else:
+                f[i] = f"Record last updated {r.get('record_updated')}; inventory snapshot {snap} (NID)"
     return f
 
 

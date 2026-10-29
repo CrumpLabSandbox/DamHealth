@@ -6,12 +6,13 @@ DamHealth turns public inventory data into a transparent, reproducible screening
 
 | Source | Snapshot | Dams | What it gives us |
 |---|---|---|---|
-| NID full inventory | 2019 | 91,457 | Location, structure, owner, purposes, hazard class, EAP, inspection date & frequency, regulator, spillway, foundation, congressional district |
-| NID high-hazard extract | 15 Mar 2026 | 16,805 | **Condition assessment**, EAP, last inspection, regulatory status, owner, type, height, storage, year |
+| NID full national export, downloaded from nid.sec.usace.army.mil on every build | the file's "Data Last Updated" date (27 Oct 2026 for the build these figures come from) | 91,907 | Location, structure, owner, purposes, hazard class, **condition assessment**, EAP, inspection date & frequency, regulator, operational status, spillway, foundation, congressional district |
 | Census Vintage 2023 | 2023 | 3,143 counties | County population as a context figure |
 | Curated research | 2024–2026 | ~130 dams | Funded/completed rehabilitation projects, case studies, funding programs |
 
-Records are joined on NID ID; 2026 values win where both exist. Every record carries `coverage` (`both`, `2026`, `2019`) and `attr_date`. Condition ratings exist only for high-hazard dams; for everyone else we say so rather than guess.
+Every record carries `coverage` (`current`) and `attr_date`, the snapshot date printed on the first line of the export, plus `record_updated`, the date the state or agency last updated that dam's entry. Associated structures (dikes, auxiliary spillways) that share a parent dam's NID ID are folded into the main structure. Condition ratings now cover every hazard class where the state reports one; where none is published we say so rather than guess.
+
+If the official download fails, the build falls back to the 2019 full export joined with the March 2026 high-hazard extract (both from GitHub mirrors), labels those records `2019`, `2026` or `both`, and the CI run shows a warning.
 
 ## 2. Issues
 
@@ -34,7 +35,7 @@ An issue is a yes/no flag derived from inventory fields, with a severity tier (1
 | PRIVATE_HIGH | Private owner, High hazard, condition ≤ Fair | 2 | readiness |
 | UNREGULATED | High/Significant hazard, no state or federal regulator recorded | 3 | readiness |
 | ENFORCEMENT | NID status = Enforcement Pending/Ongoing | 3 | readiness |
-| STALE_DATA | Record only in the 2019 snapshot | 1 | readiness |
+| STALE_DATA | The dam's NID record was last updated more than five years before the snapshot (legacy build: record only in the 2019 snapshot) | 1 | readiness |
 
 ## 3. Sub-scores (0 = best, 100 = worst)
 
@@ -57,16 +58,16 @@ Hard rules override the arithmetic:
 - High hazard with no EAP ⇒ at least **C**
 - Low hazard with no condition data ⇒ capped at **C**
 
-**Confidence**: `high` when a 2026 condition rating exists; `medium` when the dam is in the 2026 extract but Not Rated, or has 2019 inspection and construction data; `low` otherwise. A low-confidence B means "nothing bad is on record", not "this dam is fine".
+**Confidence**: `high` when a condition rating (Satisfactory to Unsatisfactory) exists; `medium` when there is no rating but the record has an inspection date or a construction year; `low` otherwise. A low-confidence B means "nothing bad is on record", not "this dam is fine".
 
-### 2026 result
+### Result (NID snapshot 27 Oct 2026)
 | Grade | All dams | High-hazard dams |
 |---|---|---|
-| A | 4,638 | 4,407 |
-| B | 53,108 | 1,995 |
-| C | 26,969 | 5,199 |
-| D | 5,374 | 3,953 |
-| F | 1,907 | 1,876 |
+| A | 25,047 | 4,887 |
+| B | 40,367 | 1,788 |
+| C | 17,942 | 4,474 |
+| D | 6,586 | 3,637 |
+| F | 1,965 | 1,758 |
 
 Only high-hazard dams can earn an A because only they have published condition ratings. Federal dams (USACE, Reclamation) are assessed under their agencies' own risk programs that are not reported to NID; they carry the low-severity `COND_FEDERAL_UNPUBLISHED` flag rather than being penalized for a missing rating.
 
@@ -78,7 +79,7 @@ Planning-level, order-of-magnitude bands adapted from the structure (size × con
 
 Each issue maps to actions in three horizons — Year 1 *Stabilize & know*, Years 2–5 *Fix the deficiencies*, Years 5–10 *Modernize & sustain* — each written twice: for community members and for engineers (with references to FEMA P-64 EAPs, FEMA P-93 inspection guidelines, FEMA P-333 hazard classification, PFMA/risk-informed practice).
 
-**Plan status** combines the 2026 NID regulatory status (Under Remediation ⇒ `under_construction`; Under Investigation/Planning/Design ⇒ `study_or_design`; Enforcement ⇒ `unfunded_identified`) with curated research on funded projects (`funded`, `completed`). A Poor/Unsatisfactory dam with neither is `no_public_plan` — the advocacy gap this site exists to close.
+**Plan status** combines the NID operational status (Under Remediation ⇒ `under_construction`; Under Investigation/Planning/Design ⇒ `study_or_design`; Enforcement ⇒ `unfunded_identified`) with curated research on funded projects (`funded`, `completed`). A Poor/Unsatisfactory dam with neither is `no_public_plan` — the advocacy gap this site exists to close.
 
 ## 7. Projections
 
@@ -88,4 +89,4 @@ Each issue maps to actions in three horizons — Year 1 *Stabilize & know*, Year
 - **People**: county population as an upper-bound context figure; true downstream population requires inundation maps that are not public for most dams.
 
 ## 8. Limitations
-Condition ratings are self-reported by states and agencies and over 2,200 high-hazard dams carry none; 75,672 dams have only 2019 attributes; NID stores 0 for unknown measurements; owner and regulator fields are incomplete; our cost bands and breach estimates are screening heuristics. All code is in `data/pipeline/` and every number on the site can be regenerated from the sources above.
+Condition ratings are self-reported by states and agencies and 3,515 high-hazard dams carry none; 14,665 dams have a record that has not been updated in more than five years; NID stores 0 for unknown measurements; owner and regulator fields are incomplete; our cost bands and breach estimates are screening heuristics. All code is in `data/pipeline/` and every number on the site can be regenerated from the sources above.

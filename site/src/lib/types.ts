@@ -51,14 +51,14 @@ export interface Catalog {
   plan_status_labels: Record<PlanStatusCode, string>
   grade_bounds: [number, Grade][]
   state_names: Record<string, string>
-  snapshot_dates: { nid_full: string; nid_high_hazard: string; census: string }
+  snapshot_dates: { nid: string; census: string }
   sources: Record<string, SourceMeta>
   field_sources: { nid2026hh: string[]; census2023: string[]; computed: string[] }
   built: string
 }
 
 export interface SourceMeta {
-  id: string; name: string; publisher: string; snapshot: string; url: string
+  id: string; name: string; publisher: string; snapshot: string | null; url: string
   mirror: string | null; mirror_commit: string | null; file: string; records: number | null
 }
 
@@ -165,8 +165,9 @@ export interface Dam {
   cong_district?: string | null
   cong_rep_2019?: string | null
   status: string | null
-  coverage: 'both' | '2019' | '2026'
+  coverage: 'current' | 'both' | '2019' | '2026'
   attr_date: string
+  record_updated?: string | null
   merge_note?: string | null
   issues: string[]
   issue_facts?: Record<string, string>

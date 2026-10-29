@@ -1,5 +1,9 @@
-"""Steps 01–03: ingest the 2019 full NID and the 2026 high-hazard extract, merge them
-into one canonical record per dam, and attach county population context.
+"""Steps 01–03: ingest the National Inventory of Dams into one canonical record per dam
+and attach county population context.
+
+Preferred source: the current full national export from nid.sec.usace.army.mil
+(data/raw/nation.csv). If it is missing, fall back to the legacy merge of the 2019
+full export and the March 2026 high-hazard extract.
 
 Usage: python3 -I data/pipeline/build_dataset.py
 Output: data/build/dams.json  (list of canonical records)
@@ -17,7 +21,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from common import (  # noqa: E402
     BUILD, CURATED, CORE_CONFIG, CORE_MATERIAL, DAM_FAMILY, DAM_TYPE, EAP, FOUNDATION_MATERIAL,
-    HAZARD, HHPD2026_DATE, HHPD2026_GEOJSON, NID2019_CSV, NID2019_DATE, OWNER_TYPE, PURPOSES,
+    HAZARD, HHPD2026_DATE, HHPD2026_GEOJSON, NID2019_CSV, NID2019_DATE, NID_CURRENT_CSV, OWNER_TYPE, PURPOSES,
     SPILLWAY_TYPE, STATE_ABBR, STATE_FIPS, STATE_NAMES, dump_json, load_json, parse_date,
     parse_float, parse_int, title_case,
 )
@@ -248,7 +252,192 @@ def ingest_2026() -> dict[str, dict]:
     return dams
 
 
-# --------------------------------------------------------------------------- merge
+# --------------------------------------------------------------------------- current full NID
+
+CURRENT_PURPOSE = {
+    "Fire Protection, Stock, Or Small Fish Pond": "Fire Protection, Stock, or Small Farm Pond",
+    "Fire Protection, Stock, Or Small Farm Pond": "Fire Protection, Stock, or Small Farm Pond",
+    "Flood Control": "Flood Risk Reduction",
+}
+CURRENT_CONDITION = {"Satisfactory", "Fair", "Poor", "Unsatisfactory"}
+UNKNOWN_WORDS = {"", "unlisted/unknown", "unknown", "n/a", "none"}
+
+
+def _split(v: str | None) -> list[str]:
+    """NID multi-value cells are ';'-separated. Commas appear inside single values."""
+    out: list[str] = []
+    for part in (v or "").split(";"):
+        part = part.strip()
+        if part.lower() not in UNKNOWN_WORDS and part not in out:
+            out.append(part)
+    return out
+
+
+def _yes(v: str | None) -> bool:
+    return (v or "").strip().lower() == "yes"
+
+
+def _first_with(primary: str | None, values: list[str]) -> list[str]:
+    primary = (primary or "").strip()
+    if primary and primary.lower() not in UNKNOWN_WORDS:
+        values = [primary] + [x for x in values if x != primary]
+    return values
+
+
+def _latest_year(v: str | None) -> int | None:
+    """'Years Modified' looks like '1962O;1971H;2014F' (year + modification-type letter)."""
+    years = [int(y) for y in re.findall(r"(1[6-9]\d\d|20\d\d)", v or "")]
+    return max(years) if years else None
+
+
+def read_current_snapshot_date(path: Path) -> str:
+    """First line of nation.csv: 'Data Last Updated:,2026-10-27'."""
+    with open(path, encoding="utf-8-sig", errors="replace") as f:
+        first = f.readline()
+    m = re.search(r"(\d{4}-\d{2}-\d{2})", first)
+    if not m or "last updated" not in first.lower():
+        raise SystemExit(f"{path.name}: expected a 'Data Last Updated' first line, got {first.strip()[:80]!r}")
+    return m.group(1)
+
+
+def current_federal_roles(row: dict) -> list[str]:
+    roles = []
+    for col, label in (
+        ("Federal Agency Owners", "Owner"), ("Federal Agency Involvement Funding", "Funding"),
+        ("Federal Agency Involvement Design", "Design"), ("Federal Agency Involvement Construction", "Construction"),
+        ("Federal Agency Involvement Regulatory", "Regulatory"), ("Federal Agency Involvement Inspection", "Inspection"),
+        ("Federal Agency Involvement Operation", "Operation"), ("Federal Agency Involvement Other", "Other"),
+    ):
+        agencies = _split(row.get(col))
+        if agencies:
+            roles.append(f"{label}: {'; '.join(agencies)}")
+    if _yes(row.get("Federally Regulated Dam")) and not any(r.startswith("Regulatory") for r in roles):
+        roles.append("Regulatory: federally regulated (agency not named)")
+    return roles
+
+
+def current_record(row: dict, snapshot: str) -> dict | None:
+    nid = (row.get("NID ID") or "").strip().upper()
+    if not nid:
+        return None
+    state_name = (row.get("State") or "").strip()
+    state = STATE_ABBR.get(state_name, state_name[:2].upper())
+    lat, lon = parse_float(row.get("Latitude")), parse_float(row.get("Longitude"))
+    if lat is not None and lon is not None and not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        lat = lon = None
+    hazard = (row.get("Hazard Potential Classification") or "").strip()
+    hazard = hazard if hazard in HAZARD.values() else "Not Available"
+    cond = (row.get("Condition Assessment") or "").strip()
+    if cond in CURRENT_CONDITION:
+        condition = cond
+    elif cond:  # "Not Rated", "Not Available"
+        condition = "Not Rated"
+    else:
+        condition = None
+    eap = (row.get("EAP Prepared") or "").strip()
+    spillway = (row.get("Spillway Type") or "").strip()
+    freq = parse_float(row.get("Inspection Frequency"))
+    owners = [title_case(o) for o in _split(row.get("Owner Names"))]
+    owner_types = _first_with(row.get("Primary Owner Type"), _split(row.get("Owner Types")))
+    dam_types = [t if t in DAM_FAMILY else t.title() for t in _first_with(row.get("Primary Dam Type"), _split(row.get("Dam Types")))]
+    purposes = [CURRENT_PURPOSE.get(p, p) for p in _first_with(row.get("Primary Purpose"), _split(row.get("Purposes")))
+                if re.search(r"[A-Za-z]", p)]  # a few rows carry numeric placeholders such as "-1"
+    foundation = []
+    for f in _split(row.get("Foundation")):
+        for part in re.split(r"\s+and\s+", f):
+            part = part.strip().title()
+            if part and part not in foundation:
+                foundation.append(part)
+    other_names = [n for n in (title_case(x) for x in _split(row.get("Other Names")) + _split(row.get("Former Names"))) if n]
+    rec = {
+        "nid_id": nid,
+        "name": title_case(row.get("Dam Name")) or nid,
+        "other_names": list(dict.fromkeys(other_names)),
+        "state": state,
+        "state_name": STATE_NAMES.get(state, state_name),
+        "county": title_case(row.get("County")),
+        "city": title_case(_split(row.get("City"))[0] if _split(row.get("City")) else None),
+        "city_distance_mi": parse_float(row.get("Distance to Nearest City (Miles)")),
+        "river": title_case(row.get("River or Stream Name")),
+        "lat": lat,
+        "lon": lon,
+        "owner_name": "; ".join(o for o in owners if o) or None,
+        "owner_types": list(dict.fromkeys(owner_types)),
+        "private_dam": (owner_types or [""])[0] == "Private",
+        "designer": "; ".join(n for n in (title_case(x) for x in _split(row.get("Designer Names"))) if n) or None,
+        "dam_types": list(dict.fromkeys(dam_types)),
+        "core": ", ".join(dict.fromkeys(_split(row.get("Core Types")))) or None,
+        "foundation": " / ".join(foundation) or None,
+        "purposes": list(dict.fromkeys(purposes)),
+        "year_completed": parse_int(row.get("Year Completed")),
+        "year_modified": _latest_year(row.get("Years Modified")),
+        "length_ft": parse_float(row.get("Dam Length (Ft)")),
+        "height_ft": parse_float(row.get("NID Height (Ft)")) or parse_float(row.get("Dam Height (Ft)")),
+        "structural_height_ft": parse_float(row.get("Structural Height (Ft)")),
+        "hydraulic_height_ft": parse_float(row.get("Hydraulic Height (Ft)")),
+        "max_discharge_cfs": parse_float(row.get("Max Discharge (Cubic Ft/Second)")),
+        "max_storage_acft": parse_float(row.get("Max Storage (Acre-Ft)")),
+        "normal_storage_acft": parse_float(row.get("Normal Storage (Acre-Ft)")),
+        "nid_storage_acft": parse_float(row.get("NID Storage (Acre-Ft)")),
+        "surface_area_ac": parse_float(row.get("Surface Area (Acres)")),
+        "drainage_area_sqmi": parse_float(row.get("Drainage Area (Sq Miles)")),
+        "hazard": hazard,
+        "condition": condition,
+        "condition_date": parse_date(row.get("Condition Assessment Date")) if condition else None,
+        "eap": eap if eap in ("Yes", "No", "Not Required") else None,
+        "eap_last_revision": parse_date(row.get("EAP Last Revision Date")),
+        "inspection_date": parse_date(row.get("Last Inspection Date")),
+        "inspection_frequency_yrs": freq if freq else None,
+        "state_regulated": _yes(row.get("State Regulated Dam")),
+        "state_reg_agency": title_case(row.get("State Regulatory Agency")),
+        "jurisdictional": _yes(row.get("State Jurisdictional Dam")),
+        "permitting_authority": _yes(row.get("State Permitting Authority")),
+        "inspection_authority": _yes(row.get("State Inspection Authority")),
+        "enforcement_authority": _yes(row.get("State Enforcement Authority")),
+        "spillway_type": spillway if spillway in SPILLWAY_TYPE.values() else None,
+        "spillway_width_ft": parse_float(row.get("Spillway Width (Ft)")),
+        "outlet_gates": "; ".join(_split(row.get("Outlet Gate Type"))) or None,
+        "volume_cy": parse_float(row.get("Volume (Cubic Yards)")),
+        "number_of_locks": parse_int(row.get("Number of Locks")) or None,
+        "federal_roles": current_federal_roles(row),
+        "source_agency": (row.get("Source Agency") or "").strip() or None,
+        "url": (row.get("Website URL") or "").strip() or None,
+        "cong_district": (row.get("Congressional District") or "").strip() or None,
+        "num_structures": parse_int(row.get("Number of Associated Structures")),
+        "status": (row.get("Operational Status") or "").strip() or None,
+        "coverage": "current",
+        "attr_date": snapshot,
+        "record_updated": parse_date(row.get("Data Last Updated")),
+    }
+    return rec
+
+
+def ingest_current(path: Path = NID_CURRENT_CSV) -> tuple[list[dict], dict]:
+    """Read nation.csv. Associated structures (dikes, spillways) can share the parent dam's
+    NID ID; keep the main structure, and among several main rows the one with most storage."""
+    snapshot = read_current_snapshot_date(path)
+    chosen: dict[str, tuple[tuple, dict]] = {}
+    report = Counter()
+    with open(path, encoding="utf-8-sig", errors="replace", newline="") as f:
+        f.readline()  # "Data Last Updated:,YYYY-MM-DD"
+        for row in csv.DictReader(f):
+            report["rows"] += 1
+            rec = current_record(row, snapshot)
+            if rec is None:
+                report["rows_without_id"] += 1
+                continue
+            rank = (not _yes(row.get("Is Associated Structure?")), parse_float(row.get("NID Storage (Acre-Ft)")) or 0.0)
+            prev = chosen.get(rec["nid_id"])
+            if prev is not None:
+                report["associated_rows_folded"] += 1
+            if prev is None or rank > prev[0]:
+                chosen[rec["nid_id"]] = (rank, rec)
+    report["snapshot"] = snapshot
+    report["source"] = "nidcurrent"
+    return [rec for _, rec in chosen.values()], dict(report)
+
+
+# --------------------------------------------------------------------------- legacy merge
 
 # Fields where a 2026 value, when present, replaces the 2019 value.
 OVERRIDE_2026 = [
@@ -300,9 +489,18 @@ def merge(d19: dict[str, dict], d26: dict[str, dict]) -> tuple[list[dict], dict]
             report["2026_only"] += 1
     report["2019_only"] = sum(1 for r in merged.values() if r["coverage"] == "2019")
     report["total"] = len(merged)
-
-    # Derived fields common to every record.
+    report["source"] = "legacy"
     for r in merged.values():
+        # High in 2019 but absent from the 2026 high-hazard extract: likely reclassified or removed.
+        if r["coverage"] == "2019" and r["hazard"] == "High":
+            r["hazard_note"] = "Classified High in the 2019 inventory but not present in the March 2026 high-hazard extract; may have been reclassified, breached, or removed."
+    return list(merged.values()), dict(report)
+
+
+def finalize(records: list[dict]) -> list[dict]:
+    """Derived fields and clean-up common to every record, whichever source it came from."""
+    max_year = max(2026, __import__("datetime").date.today().year)
+    for r in records:
         # NID uses 0 for "unknown" in most measurements.
         for k in ("length_ft", "height_ft", "structural_height_ft", "hydraulic_height_ft", "max_discharge_cfs",
                   "max_storage_acft", "normal_storage_acft", "nid_storage_acft", "surface_area_ac",
@@ -311,14 +509,12 @@ def merge(d19: dict[str, dict], d26: dict[str, dict]) -> tuple[list[dict], dict]
                 r[k] = None
         if r.get("city") and re.fullmatch(r"[\d.\- ]+", r["city"]):
             r["city"] = None
-        if r.get("year_completed") and not (1600 <= r["year_completed"] <= 2026):
+        if r.get("year_completed") is not None and not (1600 <= r["year_completed"] <= max_year):
             r["year_completed"] = None
-        if r.get("year_modified") and not (1600 <= r["year_modified"] <= 2026):
+        if r.get("year_modified") is not None and not (1600 <= r["year_modified"] <= max_year):
             r["year_modified"] = None
-        # High in 2019 but absent from the 2026 high-hazard extract: likely reclassified or removed.
-        r["hazard_note"] = None
-        if r["coverage"] == "2019" and r["hazard"] == "High":
-            r["hazard_note"] = "Classified High in the 2019 inventory but not present in the March 2026 high-hazard extract; may have been reclassified, breached, or removed."
+        r.setdefault("hazard_note", None)
+        r.setdefault("record_updated", None)
         r.setdefault("other_names", [])
         r.setdefault("merge_note", None)
         r.setdefault("federal_roles", [])
@@ -327,7 +523,7 @@ def merge(d19: dict[str, dict], d26: dict[str, dict]) -> tuple[list[dict], dict]
         if r.get("condition") is None:
             r["condition"] = "Not Rated" if r["hazard"] in ("High", "Significant") else None
         r["has_coords"] = r.get("lat") is not None and r.get("lon") is not None
-    return sorted(merged.values(), key=lambda x: x["nid_id"]), dict(report)
+    return sorted(records, key=lambda x: x["nid_id"])
 
 
 # --------------------------------------------------------------------------- county population
@@ -366,9 +562,14 @@ def attach_population(dams: list[dict]) -> int:
 
 
 def main() -> None:
-    d19 = ingest_2019()
-    d26 = ingest_2026()
-    dams, report = merge(d19, d26)
+    if NID_CURRENT_CSV.exists():
+        records, report = ingest_current()
+        print(f"Using current NID export {NID_CURRENT_CSV.name}, data last updated {report['snapshot']}")
+    else:
+        print(f"{NID_CURRENT_CSV.name} not found; falling back to the 2019 export + March 2026 high-hazard extract")
+        records, report = merge(ingest_2019(), ingest_2026())
+    dams = finalize(records)
+    report["total"] = len(dams)
     report["county_pop_matched"] = attach_population(dams)
     report["with_coords"] = sum(1 for r in dams if r["has_coords"])
     report["hazard"] = dict(Counter(r["hazard"] for r in dams))

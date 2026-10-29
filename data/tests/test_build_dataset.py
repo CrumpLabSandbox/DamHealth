@@ -28,9 +28,30 @@ def test_unique_ids(dams):
     assert len(ids) == len(set(ids))
 
 
-def test_2026_condition_coverage(dams):
+def test_coverage_is_one_build_path(dams):
+    coverage = {d["coverage"] for d in dams}
+    assert coverage == {"current"} or coverage <= {"both", "2019", "2026"}
+
+
+def test_current_snapshot_dates(dams):
+    current = [d for d in dams if d["coverage"] == "current"]
+    if not current:
+        pytest.skip("legacy build (nation.csv not present)")
+    snapshots = {d["attr_date"] for d in current}
+    assert len(snapshots) == 1, "every record carries the file's Data Last Updated date"
+    snap = snapshots.pop()
+    assert snap >= "2026-10-01"
+    assert all(d["record_updated"] is None or d["record_updated"] <= snap for d in current)
+    # Condition ratings now cover all hazard classes, not only High.
+    rated = Counter(d["hazard"] for d in current if d["condition"] in ("Satisfactory", "Fair", "Poor", "Unsatisfactory"))
+    assert rated["High"] > 10_000 and rated["Low"] > 1_000
+
+
+def test_legacy_condition_coverage(dams):
     with_2026 = [d for d in dams if d["coverage"] in ("both", "2026")]
-    assert len(with_2026) == 16_324 or 16_000 <= len(with_2026) <= 17_000
+    if not with_2026:
+        pytest.skip("current build")
+    assert 16_000 <= len(with_2026) <= 17_000
     assert all(d["condition"] in CONDITIONS for d in with_2026)
     assert all(d["hazard"] == "High" for d in with_2026)
     assert all(d["condition_date"] == "2026-03-15" for d in with_2026)
