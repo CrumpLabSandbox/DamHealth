@@ -24,7 +24,7 @@ export default function Home() {
     <>
       <section className="hero">
         <div className="wrap">
-          <h1>America has {fmtInt(n.dams)} dams. {fmtInt(n.high_poor_unsat)} of the ones that could kill people are in poor or failing condition.</h1>
+          <h1>America has {fmtInt(n.dams)} dams. {fmtInt(n.high_poor_unsat)} are in poor or failing condition, and their failure could lead to loss of life.</h1>
           <p className="lede">
             {lens === 'community'
               ? 'DamHealth shows you the dam upstream of your town, what is wrong with it, and what it would take to fix it — so communities can push for repairs before the next flood.'
