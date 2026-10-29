@@ -24,6 +24,9 @@ ISSUES = {
     "COND_UNKNOWN": {"sev": 3, "group": "condition", "title": "Condition not rated",
                      "plain": "This dam could cause loss of life or serious damage if it failed, yet no condition rating is published.",
                      "eng": "No condition assessment in NID for a High or Significant hazard dam. Treated as a data gap with moderate weight."},
+    "COND_FEDERAL_UNPUBLISHED": {"sev": 1, "group": "condition", "title": "Federal rating not published",
+                                 "plain": "Federal dams are assessed under their own agency's risk program, but the rating is not published in the National Inventory.",
+                                 "eng": "Federally owned/regulated dam without an NID condition assessment. USACE (DSAC) and Reclamation (SOD) ratings are not reported to NID; see agency sources."},
     "NO_EAP": {"sev": 4, "group": "readiness", "title": "No Emergency Action Plan",
                "plain": "There is no written plan for warning and evacuating people downstream if the dam fails.",
                "eng": "EAP = No for a High-hazard dam (FEMA P-64 recommends EAPs for all high and significant hazard dams)."},
@@ -68,9 +71,9 @@ ISSUES = {
                    "eng": "Record not present in the 2026 extract; attributes are from the 2019 full inventory."},
 }
 
-GRADE_BOUNDS = [(20, "A"), (35, "B"), (50, "C"), (65, "D"), (101, "F")]
+GRADE_BOUNDS = [(20, "A"), (30, "B"), (45, "C"), (60, "D"), (101, "F")]
 
-CONDITION_BASE = {"Unsatisfactory": 100, "Poor": 80, "Fair": 45, "Satisfactory": 10, "Not Rated": 40, None: 40}
+CONDITION_BASE = {"Unsatisfactory": 100, "Poor": 80, "Fair": 45, "Satisfactory": 10, "Not Rated": 50, None: 50}
 HAZARD_BASE = {"High": 70, "Significant": 40, "Low": 10, "Undetermined": 30, "Not Available": 20}
 READINESS_WEIGHT = {"NO_EAP": 50, "NO_EAP_SIG": 35, "INSPECT_OVERDUE": 25, "INSPECT_NEVER": 30,
                     "HAZARD_UNDET": 20, "UNREGULATED": 30, "PRIVATE_HIGH": 15, "ENFORCEMENT": 30,
@@ -79,6 +82,12 @@ READINESS_WEIGHT = {"NO_EAP": 50, "NO_EAP_SIG": 35, "INSPECT_OVERDUE": 25, "INSP
 
 def _iso_year(d: str | None) -> int | None:
     return int(d[:4]) if d else None
+
+
+def is_federal(r: dict) -> bool:
+    if "Federal" in (r.get("owner_types") or []):
+        return True
+    return any(role.startswith(("Owner", "Operation", "Regulatory")) for role in (r.get("federal_roles") or []))
 
 
 def detect_issues(r: dict) -> list[str]:
@@ -93,7 +102,7 @@ def detect_issues(r: dict) -> list[str]:
     elif cond == "Fair":
         issues.append("COND_FAIR")
     elif serious and cond in (None, "Not Rated"):
-        issues.append("COND_UNKNOWN")
+        issues.append("COND_FEDERAL_UNPUBLISHED" if is_federal(r) else "COND_UNKNOWN")
 
     if r.get("eap") == "No":
         if hz == "High":
@@ -150,7 +159,7 @@ def detect_issues(r: dict) -> list[str]:
 
 def sub_scores(r: dict, issues: list[str]) -> dict:
     cond = r.get("condition")
-    condition = CONDITION_BASE.get(cond, 40)
+    condition = 25 if "COND_FEDERAL_UNPUBLISHED" in issues else CONDITION_BASE.get(cond, 50)
     if "AGE_100" in issues:
         condition += 15
     elif "AGE_75" in issues:
@@ -178,24 +187,28 @@ def grade_for(dhi: float) -> str:
 
 
 def dam_health_index(r: dict, issues: list[str], s: dict) -> tuple[float, str, list[str]]:
-    dhi = 0.45 * s["condition"] + 0.25 * s["readiness"] + 0.30 * s["consequence"]
+    # Condition drives the index, scaled by how bad a failure would be; readiness adds on top.
+    dhi = 0.70 * s["condition"] * (0.5 + 0.5 * s["consequence"] / 100.0) + 0.30 * s["readiness"]
     rules: list[str] = []
     cond, hz = r.get("condition"), r["hazard"]
     if cond == "Unsatisfactory" and hz == "High":
-        if dhi < 65:
+        if dhi < 60:
             rules.append("Unsatisfactory + High hazard ⇒ F")
-        dhi = max(dhi, 65)
+        dhi = max(dhi, 60)
     elif cond == "Unsatisfactory":
-        if dhi < 50:
+        if dhi < 45:
             rules.append("Unsatisfactory ⇒ at least D")
-        dhi = max(dhi, 50)
+        dhi = max(dhi, 45)
     elif cond == "Poor" and hz == "High":
-        if dhi < 50:
+        if dhi < 45:
             rules.append("Poor + High hazard ⇒ at least D")
-        dhi = max(dhi, 50)
-    if hz == "Low" and cond is None and dhi > 49:
+        dhi = max(dhi, 45)
+    if "NO_EAP" in issues and dhi < 30:
+        rules.append("High hazard without an EAP ⇒ at least C")
+        dhi = 30
+    if hz == "Low" and cond is None and dhi > 44:
         rules.append("Low hazard with no condition data ⇒ capped at C")
-        dhi = 49
+        dhi = 44
     dhi = round(dhi, 1)
     return dhi, grade_for(dhi), rules
 

@@ -8,6 +8,7 @@ Output: data/build/dams.json  (list of canonical records)
 from __future__ import annotations
 
 import csv
+import math
 import re
 import sys
 from collections import Counter
@@ -257,12 +258,34 @@ OVERRIDE_2026 = [
 ]
 
 
+def _norm(s: str | None) -> str:
+    return re.sub(r"[^a-z0-9]", "", re.sub(r"\b(dam|lake|reservoir|no|number)\b", "", (s or "").lower()))
+
+
+def same_structure(a: dict, b: dict) -> bool:
+    """NID re-keyed some multi-structure complexes between 2019 and 2026; a record whose
+    name AND location both disagree is treated as a different structure."""
+    na, nb = _norm(a.get("name")), _norm(b.get("name"))
+    names_agree = na == nb or (na and nb and (na in nb or nb in na))
+    if None in (a.get("lat"), a.get("lon"), b.get("lat"), b.get("lon")):
+        return True
+    km = math.hypot((a["lat"] - b["lat"]) * 111.0, (a["lon"] - b["lon"]) * 111.0 * math.cos(math.radians(a["lat"])))
+    return names_agree or km <= 5.0
+
+
 def merge(d19: dict[str, dict], d26: dict[str, dict]) -> tuple[list[dict], dict]:
     merged: dict[str, dict] = {}
     report = Counter()
     for nid, r in d19.items():
         merged[nid] = dict(r)
     for nid, r26 in d26.items():
+        if nid in merged and not same_structure(merged[nid], r26):
+            # Different structure under the same ID: trust the newer record only.
+            r26 = dict(r26)
+            r26["merge_note"] = f"2019 record under this ID ({merged[nid]['name']}) appears to be a different structure and was not merged."
+            merged[nid] = r26
+            report["2026_replaced_mismatch"] += 1
+            continue
         if nid in merged:
             r = merged[nid]
             for k in OVERRIDE_2026:
@@ -297,6 +320,7 @@ def merge(d19: dict[str, dict], d26: dict[str, dict]) -> tuple[list[dict], dict]
         if r["coverage"] == "2019" and r["hazard"] == "High":
             r["hazard_note"] = "Classified High in the 2019 inventory but not present in the March 2026 high-hazard extract; may have been reclassified, breached, or removed."
         r.setdefault("other_names", [])
+        r.setdefault("merge_note", None)
         r.setdefault("federal_roles", [])
         r["family"] = DAM_FAMILY.get((r.get("dam_types") or ["Other"])[0], "other")
         r["storage_acft"] = r.get("max_storage_acft") or r.get("nid_storage_acft") or r.get("normal_storage_acft")

@@ -35,6 +35,10 @@ ACTIONS = {
         (1, "Get the dam rated", "Ask the state dam safety office to inspect the dam and publish a condition rating.",
          "Perform a Phase 1 / periodic inspection with condition assessment per state program and FEMA P-93; publish rating to NID."),
     ],
+    "COND_FEDERAL_UNPUBLISHED": [
+        (1, "Publish the rating", "Ask the federal agency to publish this dam's risk classification in the National Inventory so the public can see it.",
+         "Report the agency's current risk classification (DSAC / SOD) and last periodic assessment date to NID."),
+    ],
     "NO_EAP": [
         (1, "Write an Emergency Action Plan", "Every dam that could kill people needs a written plan to warn and evacuate them. This can be done in months.",
          "Develop EAP per FEMA P-64: inundation mapping (breach analysis), notification flowchart, roles, and distribute to emergency management; conduct a tabletop exercise within 12 months."),
@@ -219,6 +223,8 @@ def projections(r: dict, issues: list[str], grade: str) -> dict:
         outlook.append("Without funded repairs, the identified deficiency will worsen; the next decade's extreme storms are the most likely trigger for a failure.")
     if "COND_UNKNOWN" in issues:
         outlook.append("The community cannot judge its own risk until a condition rating is published.")
+    if "COND_FEDERAL_UNPUBLISHED" in issues:
+        outlook.append("This dam is managed under a federal risk program; the public record would be stronger if its classification were published.")
     if "NO_EAP" in issues or "NO_EAP_SIG" in issues:
         outlook.append("If the dam fails there is currently no plan for who warns whom; evacuation would be improvised.")
     if any(i.startswith("AGE_") for i in issues):
