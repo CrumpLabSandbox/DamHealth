@@ -8,3 +8,4 @@ __pycache__/
 *.pyc
 data/build/
 site/public/data/
+site/public/content/

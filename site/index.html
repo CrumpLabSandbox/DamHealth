@@ -2,9 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>site</title>
+    <meta name="description" content="DamHealth: the health of every dam in the United States, dam by dam — issues, grades, and 1/5/10-year plans to fix them." />
+    <meta name="theme-color" content="#0f2a3d" />
+    <title>DamHealth</title>
+    <script>
+      // Apply the stored theme and lens before first paint to avoid a flash.
+      try {
+        var t = localStorage.getItem('damhealth.theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+      // GitHub Pages 404 fallback: restore the deep link stashed by 404.html.
+      try {
+        var p = sessionStorage.getItem('damhealth.redirect');
+        if (p) { sessionStorage.removeItem('damhealth.redirect'); history.replaceState(null, '', p); }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

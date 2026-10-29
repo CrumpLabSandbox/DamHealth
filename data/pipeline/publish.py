@@ -10,12 +10,13 @@ site/public/data/
 from __future__ import annotations
 
 import re
+import shutil
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import BUILD, SITE_DATA, STATE_NAMES, dump_json, load_json  # noqa: E402
+from common import BUILD, ROOT, SITE_DATA, STATE_NAMES, dump_json, load_json  # noqa: E402
 from plans import ACTIONS, BASELINE, CLIMATE_OUTLOOK, CLIMATE_REGION  # noqa: E402
 from scoring import GRADE_BOUNDS, ISSUES  # noqa: E402
 
@@ -157,6 +158,14 @@ def main() -> None:
         "shard_size": SHARD,
         "columns": ROW_COLUMNS,
     })
+    # Markdown content rendered by the site.
+    content = SITE_DATA.parent / "content"
+    content.mkdir(parents=True, exist_ok=True)
+    for src in (ROOT / "data" / "methodology.md", ROOT / "data" / "schema.md",
+                ROOT / "data" / "curated" / "case_studies.md", ROOT / "data" / "curated" / "funding_programs.md"):
+        if src.exists():
+            shutil.copyfile(src, content / src.name)
+
     n_files = sum(1 for _ in (SITE_DATA / "dams").rglob("*.json"))
     size_mb = sum(p.stat().st_size for p in SITE_DATA.rglob("*.json")) / 1e6
     print(f"published {len(dams)} dams, {n_files} shards, {size_mb:.1f} MB total; index {((SITE_DATA / 'index.json').stat().st_size / 1e6):.1f} MB")

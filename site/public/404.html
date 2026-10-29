@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>DamHealth</title>
+    <script>
+      // GitHub Pages has no server-side routing: stash the requested path and bounce to the app root.
+      (function () {
+        var segs = location.pathname.split('/').filter(Boolean);
+        var base = segs.length && segs[0] === 'DamHealth' ? '/DamHealth/' : '/';
+        var rest = location.pathname.slice(base.length);
+        try { sessionStorage.setItem('damhealth.redirect', base + rest + location.search + location.hash); } catch (e) {}
+        location.replace(base);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
