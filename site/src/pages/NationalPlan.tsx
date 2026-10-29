@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Loading, { ErrorBox } from '../components/Loading'
+import HandMark from '../components/HandMark'
 import Markdown from '../components/Markdown'
 import { fmtInt, fmtUSD } from '../lib/format'
 import { useCatalog, useSummary, useTitle } from '../lib/hooks'
@@ -61,7 +62,7 @@ export default function NationalPlan() {
 
       <div className="card" style={{ marginTop: 24 }}>
         <h2>What it costs, and who pays</h2>
-        <p className="prose">Our planning-level bands put the full rehabilitation of the nation's dams at <strong>{fmtUSD(n.cost_low_usd)}–{fmtUSD(n.cost_high_usd)}</strong>, compared with <a href={ext.asdso_nonfederal_usd?.url} rel="noopener">ASDSO's estimate</a> ({ext.asdso_nonfederal_usd?.as_of}) of {fmtUSD(num('asdso_nonfederal_usd'))} for non-federal dams ({fmtUSD(num('asdso_high_hazard_usd'))} for the high-hazard subset). Against that, FEMA's High Hazard Potential Dam Rehabilitation grant program received {fmtUSD(num('hhpd_iija_usd'))} from the 2021 infrastructure law — and its <a href={ext.hhpd_annual_usd?.url} rel="noopener">{ext.hhpd_annual_usd?.round ?? 'latest'} round</a> was about {fmtUSD(num('hhpd_annual_usd'))}. Private owners hold most of the problem dams and most lack the means to pay.</p>
+        <p className="prose">Our planning-level bands put the full rehabilitation of the nation's dams at <strong>{fmtUSD(n.cost_low_usd)}–{fmtUSD(n.cost_high_usd)}</strong>, compared with <a href={ext.asdso_nonfederal_usd?.url} rel="noopener">ASDSO's estimate</a> ({ext.asdso_nonfederal_usd?.as_of}) of {fmtUSD(num('asdso_nonfederal_usd'))}<HandMark checked={ext.asdso_nonfederal_usd?.checked} /> for non-federal dams ({fmtUSD(num('asdso_high_hazard_usd'))} for the high-hazard subset). Against that, FEMA's High Hazard Potential Dam Rehabilitation grant program received {fmtUSD(num('hhpd_iija_usd'))}<HandMark checked={ext.hhpd_iija_usd?.checked} /> from the 2021 infrastructure law — and its <a href={ext.hhpd_annual_usd?.url} rel="noopener">{ext.hhpd_annual_usd?.round ?? 'latest'} round</a> was about {fmtUSD(num('hhpd_annual_usd'))}<HandMark checked={ext.hhpd_annual_usd?.checked} />. Private owners hold most of the problem dams and most lack the means to pay.</p>
         <h3>Policy asks</h3>
         <ol className="prose">
           <li><strong>Reauthorize and fund the HHPD Rehabilitation Grant Program</strong> at a level that matches the inventory — at least $1 billion a year for a decade.</li>
@@ -74,7 +75,8 @@ export default function NationalPlan() {
         <p className="small"><Link to="/act">Take action →</Link> · <Link to="/methodology">Methodology →</Link></p>
       </div>
 
-      <h2 style={{ marginTop: 32 }}>Funding programs that exist today</h2>
+      <h2 style={{ marginTop: 32 }}>Funding programs that exist today<HandMark what="research table" anchor="research" /></h2>
+      <p className="small muted">Hand-researched from program pages and press releases; amounts and deadlines are as of each source and are rechecked by hand.</p>
       <Markdown file="funding_programs.md" />
     </div>
   )

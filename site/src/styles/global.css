@@ -19,7 +19,7 @@ button, input, select { font: inherit; color: inherit; }
 select { max-width: 100%; }
 label { max-width: 100%; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
-h1, h2, h3, h4 { line-height: 1.2; margin: 0 0 0.5em; letter-spacing: -0.01em; }
+h1, h2, h3, h4 { scroll-margin-top: 140px; line-height: 1.2; margin: 0 0 0.5em; letter-spacing: -0.01em; }
 h1 { font-size: clamp(1.75rem, 2.5vw + 1rem, 2.75rem); }
 h2 { font-size: clamp(1.35rem, 1.2vw + 1rem, 1.85rem); }
 h3 { font-size: 1.15rem; }
@@ -50,6 +50,11 @@ p { margin: 0 0 1em; }
 .btn-primary:hover { filter: brightness(0.95); background: var(--accent); }
 .btn-sm { min-height: 36px; padding: 6px 12px; font-size: 0.9rem; }
 .chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 600; border: 1px solid var(--hairline); background: var(--surface-2); color: var(--ink-2); }
+.chip-ok { color: var(--ink); border-color: var(--grade-a); background: transparent; }
+.chip-warn { color: var(--grade-c-ink); background: var(--grade-c); border-color: var(--grade-c); }
+/* ✎ marks a figure checked by hand rather than computed from the inventory. */
+.hand-mark { display: inline-block; margin-left: 3px; padding: 0 4px; border-radius: 4px; background: var(--grade-c); color: var(--grade-c-ink) !important; font-size: 0.75em; font-weight: 700; line-height: 1.4; text-decoration: none; vertical-align: 0.15em; }
+a.hand-mark:hover { text-decoration: underline; }
 
 /* Grade badge: letter is the meaning; color reinforces. */
 .grade { display: inline-flex; align-items: center; justify-content: center; font-weight: 800; border-radius: 10px; color: #fff; line-height: 1; }
@@ -128,6 +133,7 @@ main :is(p, li, td) a { overflow-wrap: anywhere; }
 /* Phones and small tablets: compact header with a menu. */
 @media (max-width: 760px) {
   .site-header .wrap { gap: 8px; min-height: 56px; }
+  h1, h2, h3, h4 { scroll-margin-top: 72px; }
   .brand { font-size: 1.1rem; }
   .header-phone-tools { display: flex; gap: 8px; align-items: center; margin-left: auto; }
   .theme-desktop { display: none; }

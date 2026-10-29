@@ -13,6 +13,7 @@ import DamTimeline from '../viz/DamTimeline'
 import ComparisonBars from '../viz/ComparisonBars'
 import FailureModes from '../components/FailureModes'
 import SourcesPanel from '../components/SourcesPanel'
+import HandMark from '../components/HandMark'
 import { useState } from 'react'
 import { loadDam } from '../lib/data'
 import { GRADE_SENTENCE, GRADE_WORDS, ageOf, fmtInt, fmtRange, volumeAnalogy } from '../lib/format'
@@ -42,6 +43,9 @@ export default function DamPage() {
   const eng = lens === 'engineering'
   const age = ageOf(dam.year_completed, cat.snapshot_year)
   const planLabel = cat.plan_status_labels[dam.plan_status.status]
+  // Plan status from hand research (not the inventory) is marked; a name-only match is not yet confirmed.
+  const researched = dam.plan_status.basis === 'curated research'
+  const unconfirmed = researched && dam.plan_status.match === 'name'
   const stateRoll = summary?.states[dam.state]
   // eslint-disable-next-line react-hooks/rules-of-hooks
 
@@ -70,7 +74,7 @@ export default function DamPage() {
             <span className={`chip`}>Hazard: {dam.hazard}</span>
             <span className="chip">Condition: {dam.condition ?? 'No rating'}</span>
             <span className="chip">EAP: {dam.eap ?? 'Unknown'}</span>
-            <span className="chip">Plan: {planLabel}</span>
+            <span className="chip">Plan: {planLabel}{researched && <HandMark what="project status" anchor="research" />}</span>
           </div>
           {dam.hazard_note && <p className="callout warn small" style={{ marginTop: 12 }}>{dam.hazard_note}</p>}
           {dam.merge_note && <p className="callout small" style={{ marginTop: 12 }}>{dam.merge_note}</p>}
@@ -112,8 +116,13 @@ export default function DamPage() {
       <section className="card" style={{ marginTop: 16 }}>
         <div className="section-title">
           <h2>{eng ? 'Rehabilitation work plan' : 'What should happen, and when'}</h2>
-          <span className="chip">{planLabel}</span>
+          <span className="chip">{planLabel}{researched && <HandMark what="project status" anchor="research" />}</span>
         </div>
+        {unconfirmed && (
+          <p className="callout warn small">
+            The project status above comes from hand research that was attached to this dam by its name, and a person has not yet confirmed it is the same dam. <Link to="/data-health#research">See Data health</Link>.
+          </p>
+        )}
         <PlanPanel dam={dam} catalog={cat} />
       </section>
 

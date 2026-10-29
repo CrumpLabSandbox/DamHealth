@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Loading, { ErrorBox } from '../components/Loading'
 import BuildInfo from '../components/BuildInfo'
+import HandMark from '../components/HandMark'
 import StatTile from '../components/StatTile'
 import GradeDistribution from '../viz/GradeDistribution'
 import StateChoropleth from '../viz/StateChoropleth'
@@ -85,7 +86,7 @@ export default function Dashboard() {
           <span className={`grade grade-lg grade-${v.grade}`} role="img" aria-label={`National verdict grade ${v.grade}`}>{v.grade}</span>
           <div style={{ flex: 1 }}>
             <h2 style={{ marginBottom: 4 }}>Verdict: {v.grade === 'D' ? 'a serious, fixable problem' : v.grade === 'C' ? 'concerning' : 'manageable'}</h2>
-            <p style={{ margin: 0 }}>{v.text} The American Society of Civil Engineers graded dams <strong>{String(ext.asce_dams_grade?.value ?? '—')}</strong> in its <a href={ext.asce_dams_grade?.url} rel="noopener">{ext.asce_dams_grade?.year} Report Card</a>; the data here supports that verdict.</p>
+            <p style={{ margin: 0 }}>{v.text} The American Society of Civil Engineers graded dams <strong>{String(ext.asce_dams_grade?.value ?? '—')}</strong> in its <a href={ext.asce_dams_grade?.url} rel="noopener">{ext.asce_dams_grade?.year} Report Card</a><HandMark checked={ext.asce_dams_grade?.checked} />; the data here supports that verdict.</p>
           </div>
         </div>
       </div>
@@ -161,11 +162,11 @@ export default function Dashboard() {
         <h3>What it would cost, and what is funded</h3>
         <div className="grid grid-4">
           <StatTile value={`${fmtUSD(n.cost_low_usd)}–${fmtUSD(n.cost_high_usd)}`} label="DamHealth planning-level band, all dams" />
-          <StatTile value={fmtUSD(num('asdso_nonfederal_usd'))} label={`ASDSO estimate (${ext.asdso_nonfederal_usd?.as_of}), non-federal dams`} sub={`${fmtUSD(num('asdso_high_hazard_usd'))} for high-hazard`} />
-          <StatTile value={fmtUSD(num('hhpd_iija_usd'))} label={ext.hhpd_iija_usd?.label ?? ''} />
-          <StatTile value={fmtUSD(num('hhpd_annual_usd'))} label={`FEMA HHPD grants, ${ext.hhpd_annual_usd?.round ?? 'latest'} round`} />
+          <StatTile value={fmtUSD(num('asdso_nonfederal_usd'))} label={<>ASDSO estimate ({ext.asdso_nonfederal_usd?.as_of}), non-federal dams<HandMark checked={ext.asdso_nonfederal_usd?.checked} /></>} sub={`${fmtUSD(num('asdso_high_hazard_usd'))} for high-hazard`} />
+          <StatTile value={fmtUSD(num('hhpd_iija_usd'))} label={<>{ext.hhpd_iija_usd?.label}<HandMark checked={ext.hhpd_iija_usd?.checked} /></>} />
+          <StatTile value={fmtUSD(num('hhpd_annual_usd'))} label={<>FEMA HHPD grants, {ext.hhpd_annual_usd?.round ?? 'latest'} round<HandMark checked={ext.hhpd_annual_usd?.checked} /></>} />
         </div>
-        <p className="small muted" style={{ marginTop: 8 }}>At the {ext.hhpd_annual_usd?.round ?? 'latest'} pace the federal rehabilitation grant program would take roughly {fmtInt(num('asdso_high_hazard_usd') / num('hhpd_annual_usd'))} years to fund the high-hazard backlog alone ({fmtInt(100 * num('hhpd_federal_share'))}% federal share, before cost growth). Sources: <a href={ext.asdso_nonfederal_usd?.url} rel="noopener">{ext.asdso_nonfederal_usd?.source}</a>; <a href={ext.hhpd_annual_usd?.url} rel="noopener">{ext.hhpd_annual_usd?.source}</a>; see <Link to="/plan">the national plan</Link>.</p>
+        <p className="small muted" style={{ marginTop: 8 }}>At the {ext.hhpd_annual_usd?.round ?? 'latest'} pace the federal rehabilitation grant program would take roughly {fmtInt(num('asdso_high_hazard_usd') / num('hhpd_annual_usd'))} years to fund the high-hazard backlog alone ({fmtInt(100 * num('hhpd_federal_share'))}% federal share, before cost growth). Figures marked <HandMark /> come from outside reports and are checked by hand. Sources: <a href={ext.asdso_nonfederal_usd?.url} rel="noopener">{ext.asdso_nonfederal_usd?.source}</a>; <a href={ext.hhpd_annual_usd?.url} rel="noopener">{ext.hhpd_annual_usd?.source}</a>; see <Link to="/plan">the national plan</Link>.</p>
       </div>
 
       <div className="card" style={{ marginTop: 16 }}>

@@ -197,7 +197,7 @@ def render_markdown(text: str, ctx: dict, dams_by_id: dict[str, dict], name: str
     """Fill {{...}} placeholders from this build's data so Markdown pages never carry stale counts.
     {{national.<key>}}, {{national.issues.<CODE>}}, {{nid.<key>}}, {{curated.<key>}}, {{census.<key>}},
     {{external.<fact>.value}}, {{grades_table}}, {{dam:<NIDID>.<field>}}; prefix a path with usd: for dollars.
-    An unknown placeholder fails the build."""
+    Write \\{{ to show a literal placeholder. An unknown placeholder fails the build."""
     def value(token: str) -> str:
         token = token.strip()
         if token.startswith("usd:"):
@@ -220,7 +220,9 @@ def render_markdown(text: str, ctx: dict, dams_by_id: dict[str, dict], name: str
                 raise SystemExit(f"{name}: unknown placeholder {{{{{token}}}}}")
             cur = cur[part]
         return fmt_int(cur) if isinstance(cur, (int, float)) and not isinstance(cur, bool) else str(cur)
-    return re.sub(r"\{\{([^{}]+)\}\}", lambda m: value(m.group(1)), text)
+    # \{{ … }} is a literal placeholder shown as an example, not filled in.
+    text = text.replace("\\{{", "\x00")
+    return re.sub(r"\{\{([^{}]+)\}\}", lambda m: value(m.group(1)), text).replace("\x00", "{{")
 
 
 def main() -> None:
@@ -307,7 +309,7 @@ def main() -> None:
     census_csv = ROOT / "data" / "curated" / "county_population.csv"
     ctx["census"] = {"counties": sum(1 for _ in open(census_csv, encoding="utf-8")) - 1 if census_csv.exists() else 0}
     by_id = {r["nid_id"]: r for r in dams}
-    for src in (ROOT / "data" / "methodology.md", ROOT / "data" / "schema.md",
+    for src in (ROOT / "data" / "methodology.md", ROOT / "data" / "schema.md", ROOT / "RECHECK.md",
                 ROOT / "data" / "curated" / "case_studies.md", ROOT / "data" / "curated" / "funding_programs.md"):
         if src.exists():
             (content / src.name).write_text(render_markdown(src.read_text(encoding="utf-8"), ctx, by_id, src.name), encoding="utf-8")
@@ -317,6 +319,17 @@ def main() -> None:
     recheck = {"built": provenance["built"], "nid_snapshot": snapshot,
                "curated_plan_rows": score.get("curated_recheck", []), "external_facts_overdue": external_overdue}
     dump_json(BUILD / "recheck_report.json", recheck, compact=False)
+    # The same report, for the site's Data health page, with each external fact's check age.
+    today = date.today()
+    dump_json(SITE_DATA / "recheck.json", {
+        **recheck,
+        "provenance": provenance,
+        "external_max_age_days": EXTERNAL_MAX_AGE_DAYS,
+        "external_facts": [{"key": k, **f, "days_since_check": (today - date.fromisoformat(f["checked"])).days,
+                            "overdue": (today - date.fromisoformat(f["checked"])).days > EXTERNAL_MAX_AGE_DAYS}
+                           for k, f in external.items()],
+        "curated_rows_total": sum(1 for _ in open(ROOT / "data" / "curated" / "plan_status.csv", encoding="utf-8")) - 1,
+    }, compact=False)
     unmatched = [r for r in recheck["curated_plan_rows"] if r["issue"] != "matched by name only; verify and pin nid_id"]
     name_only = len(recheck["curated_plan_rows"]) - len(unmatched)
     lines = [f"Research row: {r['row']} — {r['issue']}" for r in unmatched]

@@ -1,4 +1,4 @@
-import type { Catalog, Dam, IndexRow, ListRow, StateFile, Summary } from './types'
+import type { Catalog, Dam, IndexRow, ListRow, RecheckFile, StateFile, Summary } from './types'
 
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 const cache = new Map<string, Promise<unknown>>()
@@ -16,6 +16,7 @@ function getJSON<T>(path: string): Promise<T> {
 
 export const loadCatalog = () => getJSON<Catalog>('catalog.json')
 export const loadSummary = () => getJSON<Summary>('summary.json')
+export const loadRecheck = () => getJSON<RecheckFile>('recheck.json')
 export const loadState = (st: string) => getJSON<StateFile>(`states/${st.toUpperCase()}.json`)
 
 let indexPromise: Promise<IndexRow[]> | null = null

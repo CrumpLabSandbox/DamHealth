@@ -66,6 +66,17 @@ export interface Provenance {
   nid_bytes: number | null; nid_rows: number | null; dams: number; git_sha: string | null; built: string
 }
 
+/** data/recheck.json: everything this build could not verify on its own. */
+export interface RecheckRow {
+  row: string; issue: string; nid_id?: string; matched_name?: string; candidates?: number
+  status?: string | null; program?: string | null; source_url?: string | null
+}
+export interface RecheckFile {
+  built: string; nid_snapshot: string | null; provenance: Provenance; external_max_age_days: number
+  curated_plan_rows: RecheckRow[]; curated_rows_total: number
+  external_facts: (ExternalFact & { key: string; days_since_check: number; overdue: boolean })[]
+}
+
 /** A figure from outside the inventory, kept in data/curated/external_facts.json and checked by hand. */
 export interface ExternalFact {
   value: number | string; label: string; source: string; url: string; as_of: string; checked: string; round?: string; year?: number
@@ -192,7 +203,7 @@ export interface Dam {
   grade_rules: string[]
   confidence: 'high' | 'medium' | 'low'
   cost: { low_usd: number; high_usd: number; basis: string } | null
-  plan_status: { status: PlanStatusCode; basis?: string; program?: string | null; amount_usd?: string | number | null; year?: string | number | null; source_url?: string | null; note?: string | null }
+  plan_status: { status: PlanStatusCode; basis?: string; match?: 'pinned' | 'name'; program?: string | null; amount_usd?: string | number | null; year?: string | number | null; source_url?: string | null; note?: string | null }
   projections: {
     climate_region: string
     services_at_stake: string[]

@@ -49,9 +49,11 @@ def load_curated_plan_status(dams: list[dict]) -> tuple[dict[str, dict], list[st
         for row in csv.DictReader(f):
             nid = (row.get("nid_id") or "").strip().upper()
             label = f'{row.get("dam_name")} ({(row.get("state") or "").strip().upper()})'
+            detail = {"status": row.get("status") or None, "program": row.get("program") or None,
+                      "source_url": (row.get("source_url") or "").strip() or None}
             if nid and nid not in known:
                 unmatched.append(f"{label} — pinned to {nid}, which is not in this NID snapshot")
-                recheck.append({"row": label, "issue": "pinned NID ID missing from snapshot", "nid_id": nid})
+                recheck.append({"row": label, "issue": "pinned NID ID missing from snapshot", "nid_id": nid, **detail})
                 continue
             if not (row.get("source_url") or "").strip().startswith("http"):
                 unmatched.append(f"{label} — dropped: no source_url")
@@ -70,10 +72,10 @@ def load_curated_plan_status(dams: list[dict]) -> tuple[dict[str, dict], list[st
                     row["match"] = "name+state"
                     recheck.append({"row": label, "issue": "matched by name only; verify and pin nid_id",
                                     "nid_id": nid, "matched_name": cands[0]["name"],
-                                    "candidates": len({c["nid_id"] for c in cands})})
+                                    "candidates": len({c["nid_id"] for c in cands}), **detail})
                 else:
                     unmatched.append(label)
-                    recheck.append({"row": label, "issue": "no dam in this NID snapshot matches the name"})
+                    recheck.append({"row": label, "issue": "no dam in this NID snapshot matches the name", **detail})
                     continue
             out[nid] = row
     return out, unmatched, recheck

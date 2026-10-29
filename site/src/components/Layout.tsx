@@ -12,6 +12,7 @@ const NAV = [
   ['/case-studies', 'Case Studies'],
   ['/community', 'Community'],
   ['/engineering', 'Engineering'],
+  ['/data-health', 'Data health'],
 ] as const
 
 function Logo() {
@@ -101,7 +102,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <p>An independent advocacy project. Data: U.S. Army Corps of Engineers National Inventory of Dams (current national export, refreshed on every build), U.S. Census Bureau, and cited public sources.</p>
           </div>
           <div>
-            <ul className="footer-links"><li><Link to="/methodology">Methodology &amp; limitations</Link></li><li><Link to="/dashboard">National dashboard</Link></li><li><Link to="/act">Take action</Link></li><li><a href="https://nid.sec.usace.army.mil/" rel="noopener">Official National Inventory of Dams</a></li></ul>
+            <ul className="footer-links"><li><Link to="/methodology">Methodology &amp; limitations</Link></li><li><Link to="/dashboard">National dashboard</Link></li><li><Link to="/data-health">Data health and hand checks</Link></li><li><Link to="/act">Take action</Link></li><li><a href="https://nid.sec.usace.army.mil/" rel="noopener">Official National Inventory of Dams</a></li></ul>
           </div>
           <div>
             <p>The Dam Health Index is a screening indicator computed from public inventory data. It is not an engineering assessment and must not be used to make safety decisions about a specific dam.</p>

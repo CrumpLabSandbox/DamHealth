@@ -15,6 +15,7 @@ const Methodology = lazy(() => import('./pages/Methodology'))
 const Community = lazy(() => import('./pages/Community'))
 const Engineering = lazy(() => import('./pages/Engineering'))
 const Act = lazy(() => import('./pages/Act'))
+const DataHealth = lazy(() => import('./pages/DataHealth'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function ScrollAndFocus() {
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/community" element={<Community />} />
           <Route path="/engineering" element={<Engineering />} />
           <Route path="/act" element={<Act />} />
+          <Route path="/data-health" element={<DataHealth />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

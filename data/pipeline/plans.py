@@ -131,7 +131,9 @@ def plan_status(r: dict, curated: dict | None) -> dict:
         return {"status": curated["status"], "program": curated.get("program") or None,
                 "amount_usd": curated.get("amount_usd") or None, "year": curated.get("year") or None,
                 "source_url": curated.get("source_url") or None, "note": curated.get("note") or None,
-                "basis": "curated research"}
+                "basis": "curated research",
+                # "name": attached by dam name and state, not yet confirmed by a person (see Data health).
+                "match": "name" if curated.get("match") == "name+state" else "pinned"}
     st = r.get("status") or ""
     label = f"NID status ({r.get('attr_date')})"
     if st.startswith("Under Remediation"):
