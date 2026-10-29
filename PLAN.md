@@ -82,6 +82,10 @@ data/
     04_score.py                 # issues + Dam Health Index + grade
     05_plans.py                 # renovation plan templates + cost bands per dam
     06_publish.py               # emit site data (below)
+  curated/
+    plan_status.csv             # NIDID, status, source URL, note (hand-researched)
+    case_studies/*.md           # narratives with citations
+    county_population.csv       # Census county population (bundled)
   schema.md                     # canonical field dictionary
 site/public/data/
   index.json                    # 92k × {id, name, st, lat, lon, hazard, grade, score} (~5 MB, gz ~1.2 MB) for map/search
@@ -181,12 +185,12 @@ Hand-written, cited narratives for ~20 dams: what happened or is at risk, cost, 
 
 | Phase | Work | Verify |
 |---|---|---|
-| **1. Data** (first) | Scaffold repo, pipeline 01–03, canonical dataset, `schema.md`, provenance counts. | pytest: 91k+ records, 16,805 with 2026 condition, no duplicate IDs, coord sanity. |
-| **2. Scoring & plans** | 04–05, issue catalogue, DHI, grades, cost bands, plan templates; `methodology.md`. | Invariants (Unsat+High ⇒ F), distribution review, spot-check 20 famous dams. |
-| **3. Site core** | Vite app, routing, data loading, home, dam page, state page, search. | Vitest, Playwright smoke, axe clean. |
-| **4. Visualizers** | Cross-section, gauge, consequence strip, timeline, choropleth, MapLibre map. | Screenshot review in both themes; keyboard-only run. |
-| **5. Content** | Issues explainer, national plan, case studies (WebSearch), about/act. | Every claim cited. |
-| **6. Ship** | Prerender, Pages workflow, README, data download page. | Live URL loads; Lighthouse a11y ≥ 95. |
+| **1. Data** (first) | Scaffold repo on `main`, pipeline 01–03, canonical dataset, `schema.md`, provenance counts, bundled Census county population. | pytest: 91k+ records, 16,805 with 2026 condition, no duplicate IDs, coord sanity. |
+| **2. Scoring, plans, projections** | 04–05, issue catalogue, DHI, grades, cost bands, 1/5/10-yr plan templates (community + engineering wording), plan-status table, breach-discharge & community projections; `methodology.md`. | Invariants (Unsat+High ⇒ F), distribution review, spot-check 20 famous dams. |
+| **3. Site core** | Vite app, routing (`/`, `/explore`, `/dam/:id`, `/state/:st`, lens pages), data loading, search, Community/Engineering lens toggle, Pages 404 fallback. | Vitest, Playwright smoke, axe clean. |
+| **4. Explorer & visualizers** | Map-plus-profile explorer (next/prev/random/near-me), cross-section schematic with callouts, gauge, consequence strip, timeline, choropleth, comparison bars, failure-mode checklist. | Screenshot review in both themes; keyboard-only run. |
+| **5. Enrichment & content** | Runtime Wikipedia/Wikimedia photo + history with confidence matching and schematic fallback; case studies, plan-status research, issues explainer, national agenda, community organizing kit, engineering library, about/act. | Every claim cited; enrichment degrades gracefully offline. |
+| **6. Ship** | Prerender top dams + states, GitHub Actions → Pages workflow, README, data download page. | Live Pages URL loads; Lighthouse a11y ≥ 95. |
 
 Each phase ends with a commit; I'll report counts/screenshots as I go.
 
