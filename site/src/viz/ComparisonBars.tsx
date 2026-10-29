@@ -14,7 +14,7 @@ export default function ComparisonBars({ dam, state, national }: { dam: Dam; sta
         return (
           <div key={r.label} style={{ margin: '10px 0' }}>
             <div className="small muted">{r.label}</div>
-            {[['This dam', r.dam, 'var(--accent)'], [dam.state_name + ' (typical)', r.state, 'var(--axis)'], ['United States (typical)', r.nation, 'var(--axis)']].map(([lab, v, color]) => (
+            {[['This dam', r.dam, 'var(--accent-fill)'], [dam.state_name + ' (typical)', r.state, 'var(--axis)'], ['United States (typical)', r.nation, 'var(--axis)']].map(([lab, v, color]) => (
               <div key={lab as string} style={{ display: 'grid', gridTemplateColumns: '150px 1fr 48px', gap: 8, alignItems: 'center', margin: '3px 0' }}>
                 <span className="small">{lab as string}</span>
                 <div style={{ height: 10, background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden' }}>

@@ -28,13 +28,13 @@ export default function DamTimeline({ dam }: { dam: Dam }) {
   return (
     <svg viewBox="0 0 600 120" role="img" aria-label={`Timeline: ${all.map((e) => e.label).join('; ')}`} style={{ width: '100%', height: 'auto' }}>
       <line x1="20" y1="62" x2="350" y2="62" stroke="var(--axis)" strokeWidth="2" />
-      <line x1="350" y1="62" x2="580" y2="62" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 4" />
-      <rect x="350" y="52" width="230" height="20" fill="var(--accent)" opacity="0.08" />
+      <line x1="350" y1="62" x2="580" y2="62" stroke="var(--accent-fill)" strokeWidth="2" strokeDasharray="4 4" />
+      <rect x="350" y="52" width="230" height="20" fill="var(--accent-fill)" opacity="0.08" />
       {placed.map((e) => (
         <g key={e.label}>
-          <circle cx={e.x} cy="62" r={e.kind === 'now' ? 7 : 5} fill={e.kind === 'plan' ? 'var(--surface)' : e.kind === 'now' ? 'var(--accent)' : 'var(--ink-2)'} stroke={e.kind === 'plan' ? 'var(--accent)' : 'var(--surface)'} strokeWidth="2" />
+          <circle cx={e.x} cy="62" r={e.kind === 'now' ? 7 : 5} fill={e.kind === 'plan' ? 'var(--surface)' : e.kind === 'now' ? 'var(--accent-fill)' : 'var(--ink-2)'} stroke={e.kind === 'plan' ? 'var(--accent-fill)' : 'var(--surface)'} strokeWidth="2" />
           <line x1={e.x} y1={e.row ? 70 : 54} x2={e.x} y2={e.row ? 82 : 42} stroke="var(--axis)" />
-          <text x={e.x} y={e.row ? 94 : 38} textAnchor="middle" fontSize="9" fill={e.kind === 'plan' ? 'var(--accent)' : 'var(--ink-2)'} fontWeight={e.kind === 'now' ? 700 : 400}>{e.label}</text>
+          <text x={e.x} y={e.row ? 94 : 38} textAnchor="middle" fontSize="9" fill={e.kind === 'plan' ? 'var(--accent-fill)' : 'var(--ink-2)'} fontWeight={e.kind === 'now' ? 700 : 400}>{e.label}</text>
         </g>
       ))}
       <text x="20" y="114" fontSize="8" fill="var(--ink-3)">{minY}</text>

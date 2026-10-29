@@ -10,8 +10,8 @@ mkdir -p "$RAW" "$TMP"
 
 if [ ! -f "$RAW/NID2019_U.csv" ]; then
   if [ ! -d "$TMP/nid-data/.git" ]; then
+    # Root-level files are included in a sparse clone, so no sparse-checkout path is needed.
     GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --filter=blob:none --sparse https://github.com/bcongdon/nid-data "$TMP/nid-data"
-    git -C "$TMP/nid-data" sparse-checkout set NID2019_U.csv
   fi
   cp "$TMP/nid-data/NID2019_U.csv" "$RAW/NID2019_U.csv"
 fi

@@ -13,6 +13,7 @@ body {
 }
 img, svg { display: block; max-width: 100%; }
 a { color: var(--accent); text-underline-offset: 2px; }
+.hero .btn-primary { background: #ffffff; border-color: #ffffff; color: var(--brand); }
 a:hover { text-decoration-thickness: 2px; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
@@ -67,7 +68,7 @@ table.data td.num, table.data th.num { text-align: right; font-variant-numeric: 
 table.data tbody tr:hover { background: var(--surface-2); }
 
 .hero { background: var(--brand); color: var(--brand-ink); padding: 48px 0 40px; }
-.hero a { color: #cde2fb; }
+.hero a { color: #ffffff; }
 .hero .lede { font-size: 1.2rem; max-width: 60ch; color: #dbe6ef; }
 .stat { background: var(--surface); border: 1px solid var(--hairline); border-radius: var(--radius); padding: 16px 18px; }
 .stat .value { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }

@@ -36,7 +36,7 @@ export default function DamSchematic({ dam, catalog }: { dam: Dam; catalog: Cata
 
   return (
     <div>
-      <svg viewBox="0 0 600 270" role="img" aria-label={desc} style={{ width: '100%', height: 'auto' }}>
+      <svg viewBox="0 0 600 270" role="group" aria-label={desc} style={{ width: '100%', height: 'auto' }}>
         <title>{desc}</title>
         {/* sky & ground */}
         <rect x="0" y="0" width="600" height="270" fill="var(--sky)" rx="8" />

@@ -37,7 +37,7 @@ export default function HealthGauge({ scores, grade }: { scores: { condition: nu
           <div key={s.key} style={{ margin: '6px 0' }}>
             <div className="row spread small"><span><strong>{s.label}</strong> <span className="muted">· {s.plain}</span></span><span className="tabular">{Math.round(scores[s.key])}</span></div>
             <div style={{ height: 8, background: 'var(--surface-2)', borderRadius: 4, overflow: 'hidden' }} aria-hidden="true">
-              <div style={{ width: `${scores[s.key]}%`, height: '100%', background: 'var(--accent)', borderRadius: '0 4px 4px 0' }} />
+              <div style={{ width: `${scores[s.key]}%`, height: '100%', background: 'var(--accent-fill)', borderRadius: '0 4px 4px 0' }} />
             </div>
           </div>
         ))}

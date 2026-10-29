@@ -65,7 +65,7 @@ export default function StateChoropleth({ states, metric: initial = 'high_poor_u
           <tbody>{rows.map((r) => <tr key={r.st}><td><a href={`${import.meta.env.BASE_URL}state/${r.st}`} onClick={(e) => { e.preventDefault(); nav(`/state/${r.st}`) }}>{r.name}</a></td><td className="num">{fmt(r.v)}</td></tr>)}</tbody></table>
       ) : (
         <>
-          <svg viewBox="0 0 960 600" role="img" aria-label={`Map of U.S. states shaded by ${label}. Use the table view for exact values.`} style={{ width: '100%', height: 'auto' }}>
+          <svg viewBox="0 0 960 600" role="group" aria-label={`Map of U.S. states shaded by ${label}. Use the table view for exact values.`} style={{ width: '100%', height: 'auto' }}>
             {path && features.map((f) => {
               const st = FIPS[String(f.id).padStart(2, '0')]
               const s = st ? states[st] : undefined
@@ -82,7 +82,8 @@ export default function StateChoropleth({ states, metric: initial = 'high_poor_u
                   onMouseEnter={() => setHover(st ?? null)}
                   onMouseLeave={() => setHover(null)}
                   onClick={() => st && nav(`/state/${st}`)}
-                  tabIndex={st ? 0 : -1}
+                  tabIndex={st ? 0 : undefined}
+                  role={st ? 'link' : undefined}
                   onKeyDown={(e) => { if (st && (e.key === 'Enter' || e.key === ' ')) nav(`/state/${st}`) }}
                   onFocus={() => setHover(st ?? null)}
                   onBlur={() => setHover(null)}

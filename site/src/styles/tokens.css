@@ -13,7 +13,8 @@
   --ring: rgba(11, 11, 11, 0.1);
   --brand: #0f2a3d;        /* deep water */
   --brand-ink: #ffffff;
-  --accent: #2a78d6;       /* series-1 blue */
+  --accent: #1c5cab;       /* link/button ink: 6.3:1 on light surfaces */
+  --accent-fill: #2a78d6;  /* series-1 blue for marks */
   --accent-ink: #ffffff;
   --water: #9ec5f4;
   --water-deep: #5598e7;
@@ -68,6 +69,7 @@
     --ring: rgba(255, 255, 255, 0.1);
     --brand: #0b1e2c;
     --accent: #3987e5;
+    --accent-fill: #3987e5;
     --water: #1c5cab;
     --water-deep: #3987e5;
     --earth: #8a6d3b;
@@ -98,6 +100,7 @@
   --ring: rgba(255, 255, 255, 0.1);
   --brand: #0b1e2c;
   --accent: #3987e5;
+  --accent-fill: #3987e5;
   --water: #1c5cab;
   --water-deep: #3987e5;
   --earth: #8a6d3b;
